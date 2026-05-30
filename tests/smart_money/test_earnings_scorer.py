@@ -52,14 +52,18 @@ def test_far_earnings_no_modifier():
         assert abs(compute_earnings_score("AAPL") - 0.625) < 0.001
 
 
-def test_score_bounded_low_end():
-    with patch("smart_money.earnings_scorer.get_earnings_calendar", return_value=_cal(0.0)):
-        assert compute_earnings_score("AAPL") >= 0.20
+def test_score_bounded_high_end_clamp_required():
+    from datetime import date, timedelta
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    with patch("smart_money.earnings_scorer.get_earnings_calendar", return_value=_cal(1.0, yesterday)):
+        assert compute_earnings_score("AAPL") == 0.80
 
 
-def test_score_bounded_high_end():
-    with patch("smart_money.earnings_scorer.get_earnings_calendar", return_value=_cal(1.0)):
-        assert compute_earnings_score("AAPL") <= 0.80
+def test_score_bounded_low_end_clamp_required():
+    from datetime import date, timedelta
+    in_3_days = (date.today() + timedelta(days=3)).isoformat()
+    with patch("smart_money.earnings_scorer.get_earnings_calendar", return_value=_cal(0.0, in_3_days)):
+        assert compute_earnings_score("AAPL") == 0.20
 
 
 def test_exception_returns_neutral():

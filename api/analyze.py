@@ -5,7 +5,9 @@ from fastapi import APIRouter, HTTPException
 
 from data.market import get_daily_bars
 from quant.indicators import compute_indicators
-from quant.forecast import compute_arima_score, compute_garch_volatility
+from quant.forecast import compute_garch_volatility
+from quant.momentum import compute_momentum_score
+from quant.quality import compute_quality_score
 from quant.signals import compute_signal
 from quant.confidence import run_monte_carlo
 from quant.trade_setup import compute_trade_setup
@@ -36,16 +38,18 @@ def analyze_ticker(ticker: str) -> dict:
     current_price = float(bars[-1]["c"])
 
     ind = compute_indicators(bars)
-    fcast = compute_arima_score(prices)
     garch = compute_garch_volatility(prices)
 
+    momentum_score = compute_momentum_score(ticker)
+    quality_score = compute_quality_score(ticker)
     smart_money_score = compute_congress_score(ticker)
     news_score = compute_news_score(ticker)
     earnings_score = compute_earnings_score(ticker)
 
     sig = compute_signal(
         technical_score=ind["technical_score"],
-        arima_score=fcast["arima_score"],
+        momentum_score=momentum_score,
+        quality_score=quality_score,
         smart_money_score=smart_money_score,
         news_score=news_score,
         earnings_score=earnings_score,

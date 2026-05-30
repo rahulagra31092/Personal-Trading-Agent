@@ -1,7 +1,10 @@
 import logging
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from data.earnings import get_earnings_calendar
+
+_ET = ZoneInfo("America/New_York")
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +26,12 @@ def compute_earnings_score(ticker: str) -> float:
     raw_date = cal.get("next_earnings_date")
     if raw_date:
         try:
-            days = (date.fromisoformat(raw_date) - date.today()).days
-            if -3 <= days <= 0:
+            days = (date.fromisoformat(raw_date) - datetime.now(_ET).date()).days
+            if -60 <= days <= 0 and beat_rate > 0.5:
+                # PEAD: post-earnings drift favors recent beaters for up to 60 days
                 modifier = 0.05
             elif 1 <= days <= 7:
+                # Pre-earnings uncertainty discount
                 modifier = -0.05
         except Exception:
             pass

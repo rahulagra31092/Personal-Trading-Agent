@@ -39,3 +39,54 @@ def test_caches_on_second_call(mocker):
     get_ticker_news("META", days=1)
 
     assert mock_get.call_count == 1
+
+
+def test_prefetch_populates_cache_for_each_ticker():
+    """prefetch_sector_news writes a cache entry for every ticker in the sector."""
+    from unittest.mock import patch, MagicMock
+    from data.news import prefetch_sector_news
+    from data.cache import get_cache
+
+    articles = [
+        {"title": "AAPL hits record high", "description": "Apple stock surges"},
+        {"title": "MSFT cloud growth", "description": "Microsoft Azure expands"},
+    ]
+
+    with patch("data.news.newsapi") as mock_api, \
+         patch("data.news.get_cache", return_value=None):
+        mock_api.get_everything.return_value = {"articles": articles, "status": "ok"}
+        with patch("data.news.set_cache") as mock_set:
+            prefetch_sector_news({"tech": ["AAPL", "MSFT"]}, days=7)
+            tickers_cached = {call.args[0] for call in mock_set.call_args_list}
+            assert "news:AAPL:7" in tickers_cached
+            assert "news:MSFT:7" in tickers_cached
+            call_kwargs = mock_api.get_everything.call_args.kwargs
+            assert "from_param" in call_kwargs, "from_param must be passed to limit lookback"
+
+
+def test_prefetch_skips_sector_if_already_cached():
+    """prefetch_sector_news skips sectors where first ticker already has cache entry."""
+    from unittest.mock import patch
+    from data.news import prefetch_sector_news
+
+    with patch("data.news.get_cache", return_value=[{"title": "old", "description": "cached"}]), \
+         patch("data.news.newsapi") as mock_api:
+        prefetch_sector_news({"tech": ["AAPL", "MSFT"]}, days=7)
+        mock_api.get_everything.assert_not_called()
+
+
+def test_prefetch_writes_empty_list_for_ticker_with_no_matches():
+    """prefetch_sector_news writes [] for tickers that appear in no returned articles."""
+    from unittest.mock import patch
+    from data.news import prefetch_sector_news
+
+    articles = [{"title": "AAPL record high", "description": "Apple surges"}]
+
+    with patch("data.news.get_cache", return_value=None), \
+         patch("data.news.newsapi") as mock_api, \
+         patch("data.news.set_cache") as mock_set:
+        mock_api.get_everything.return_value = {"articles": articles, "status": "ok"}
+        prefetch_sector_news({"tech": ["AAPL", "MSFT"]}, days=7)
+        # MSFT appeared in no articles — its cache entry should be []
+        msft_call = next(c for c in mock_set.call_args_list if c.args[0] == "news:MSFT:7")
+        assert msft_call.args[1] == []

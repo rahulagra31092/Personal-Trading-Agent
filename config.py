@@ -30,10 +30,11 @@ def is_excluded(ticker: str) -> bool:
 
 
 SIGNAL_WEIGHTS: dict[str, float] = {
-    "technical": 0.30,
-    "arima": 0.20,
-    "smart_money": 0.20,
-    "news_reaction": 0.15,
+    "technical": 0.20,
+    "momentum": 0.25,
+    "quality": 0.15,
+    "smart_money": 0.15,
+    "news_reaction": 0.10,
     "earnings": 0.15,
 }
 assert abs(sum(SIGNAL_WEIGHTS.values()) - 1.0) < 1e-9, (

@@ -36,7 +36,6 @@ _FAKE_IND = {
     "macd_bullish": True,
     "volume_confirmed": True,
 }
-_FAKE_FCAST = {"arima_score": 0.55, "direction": "up", "probability": 0.6}
 _FAKE_GARCH = {"daily_vol": 0.018, "vol_regime": "low", "vol_scalar": 0.8}
 _FAKE_MC = {
     "base_target": 101.0,
@@ -60,8 +59,9 @@ _FAKE_TRADE_CARD = {
 def test_analyze_returns_required_keys():
     with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
          patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
-         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
          patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.compute_momentum_score", return_value=0.5), \
+         patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \
@@ -82,8 +82,9 @@ def test_analyze_excluded_ticker_returns_400():
 def test_analyze_signal_has_label():
     with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
          patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
-         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
          patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.compute_momentum_score", return_value=0.5), \
+         patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \
@@ -96,8 +97,9 @@ def test_analyze_signal_has_label():
 def test_analyze_confidence_has_prob_success():
     with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
          patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
-         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
          patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.compute_momentum_score", return_value=0.5), \
+         patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \
@@ -136,8 +138,9 @@ def test_analyze_system_error_returns_500():
 def test_analyze_trade_card_present():
     with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
          patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
-         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
          patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.compute_momentum_score", return_value=0.5), \
+         patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \
@@ -154,8 +157,9 @@ def test_analyze_trade_card_present():
 def test_analyze_trend_regime_present():
     with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
          patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
-         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
          patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.compute_momentum_score", return_value=0.5), \
+         patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \
@@ -170,8 +174,9 @@ def test_analyze_trend_regime_present():
 def test_analyze_trade_card_rr_ratio():
     with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
          patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
-         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
          patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.compute_momentum_score", return_value=0.5), \
+         patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \

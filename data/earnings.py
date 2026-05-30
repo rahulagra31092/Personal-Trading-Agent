@@ -1,6 +1,6 @@
 import yfinance as yf
 import pandas as pd
-from datetime import date, datetime
+from datetime import date, datetime  # date kept for days_to_earnings arithmetic
 from zoneinfo import ZoneInfo
 from data.cache import get_cache, set_cache
 
@@ -47,7 +47,10 @@ def days_to_earnings(ticker: str) -> int | None:
 
 
 def get_eps_beat_rate(ticker: str) -> float | None:
-    """Return fraction of last N quarters where EPS beat estimate, or None if unavailable."""
+    """Return fraction of last N quarters where EPS beat estimate, or None if unavailable.
+
+    Propagates any exception raised by get_earnings_calendar (e.g. network errors).
+    """
     cal = get_earnings_calendar(ticker)
     return cal.get("eps_beat_rate")
 
