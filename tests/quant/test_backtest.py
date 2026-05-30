@@ -1,5 +1,10 @@
 import numpy as np
+from unittest.mock import patch
 from quant.backtest import run_backtest
+
+# Pre-computed expected values with seed=42, trend=0.002, hold_days=5, all BUY signals
+EXPECTED_CAGR = 3.5772
+EXPECTED_SHARPE = 3.1336
 
 
 def _trending_bars(n: int, trend: float = 0.002, seed: int = 42) -> list[dict]:
@@ -72,14 +77,9 @@ def test_returns_new_metric_keys():
         assert key in result
 
 
-def test_max_drawdown_non_negative():
+def test_max_drawdown_bounded():
     result = run_backtest("AMZN", _trending_bars(100))
-    assert result["max_drawdown"] >= 0.0
-
-
-def test_max_drawdown_le_one():
-    result = run_backtest("AMZN", _trending_bars(100))
-    assert result["max_drawdown"] <= 1.0
+    assert 0.0 <= result["max_drawdown"] <= 1.0
 
 
 def test_zero_signals_new_metrics_are_zero():
@@ -94,6 +94,32 @@ def test_sharpe_is_float():
     assert isinstance(result["sharpe_ratio"], float)
 
 
-def test_cagr_reasonable_range():
-    result = run_backtest("AMZN", _trending_bars(100))
-    assert -1.0 <= result["cagr"] <= 10.0
+def _mock_signal(technical_score, arima_score, **kwargs):
+    """Mock signal generator that always returns BUY for pinned tests."""
+    return {
+        "composite_score": 0.8,
+        "label": "BUY",
+        "layer_scores": {
+            "technical": 0.8,
+            "arima": 0.8,
+            "smart_money": 0.5,
+            "news_reaction": 0.5,
+            "earnings": 0.5,
+        },
+    }
+
+
+def test_cagr_known_value():
+    import quant.backtest as bt
+    with patch.object(bt, "compute_signal", side_effect=_mock_signal):
+        result = run_backtest("AMZN", _trending_bars(100))
+        # Pre-computed from seed=42, trend=0.002, hold_days=5, all BUY signals
+        assert abs(result["cagr"] - EXPECTED_CAGR) < 0.01, f"got {result['cagr']}"
+
+
+def test_sharpe_known_value():
+    import quant.backtest as bt
+    with patch.object(bt, "compute_signal", side_effect=_mock_signal):
+        result = run_backtest("AMZN", _trending_bars(100))
+        # Pre-computed from seed=42, trend=0.002, hold_days=5, all BUY signals
+        assert abs(result["sharpe_ratio"] - EXPECTED_SHARPE) < 0.01, f"got {result['sharpe_ratio']}"

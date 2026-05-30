@@ -7,6 +7,8 @@ from quant.signals import compute_signal
 
 logger = logging.getLogger(__name__)
 
+TRADING_DAYS_PER_YEAR = 252  # US equity market convention
+
 
 def run_backtest(
     ticker: str,
@@ -46,6 +48,7 @@ def run_backtest(
             "future_price": future_price,
             "return_pct": round(strategy_return, 6),
             "correct": strategy_return > 0,
+            "bar_i": i,
         })
 
     if not signals_log:
@@ -66,10 +69,11 @@ def run_backtest(
     avg_ret = sum(rets) / total
 
     # Annualised Sharpe: scale per-trade returns to 252-day year
-    periods_per_year = 252.0 / hold_days
+    periods_per_year = TRADING_DAYS_PER_YEAR / hold_days
     if total > 1:
         variance = sum((r - avg_ret) ** 2 for r in rets) / (total - 1)
         std_ret = math.sqrt(variance)
+        # Rf=0 assumed; adjust TRADING_DAYS_PER_YEAR constant if comparing against benchmarks
         sharpe = round(avg_ret / std_ret * math.sqrt(periods_per_year), 4) if std_ret > 0 else 0.0
     else:
         sharpe = 0.0
@@ -86,9 +90,16 @@ def run_backtest(
         if dd > max_dd:
             max_dd = dd
 
-    total_trading_days = total * hold_days
-    if equity > 0 and total_trading_days > 0:
-        cagr = round((equity ** (252.0 / total_trading_days)) - 1.0, 4)
+    # Clamp max_drawdown to [0, 1] in case equity goes negative
+    if equity <= 0:
+        max_dd = 1.0  # total wipeout
+
+    # Use actual bar span (first to last) not overlapping windows
+    first_bar = signals_log[0]["bar_i"]
+    last_bar = signals_log[-1]["bar_i"]
+    elapsed_trading_days = (last_bar - first_bar) + hold_days
+    if equity > 0 and elapsed_trading_days > 0:
+        cagr = round((equity ** (TRADING_DAYS_PER_YEAR / elapsed_trading_days)) - 1.0, 4)
     else:
         cagr = 0.0
 
