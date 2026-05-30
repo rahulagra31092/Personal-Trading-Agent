@@ -1,0 +1,118 @@
+<h2>The Quant Model — Design Section 2 of 4</h2>
+<p class="subtitle">How raw data becomes a recommendation with confidence bands</p>
+
+<div style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px;">
+
+  <!-- Layer 1 -->
+  <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:rgba(99,179,237,0.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">1</div>
+      <div>
+        <div style="font-weight:700;color:#63b3ed;">Technical Indicators Layer</div>
+        <div style="font-size:0.85em;opacity:0.8;margin-top:4px;">Classic price/volume signals — the foundation of every model</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:12px;font-size:0.82em;">
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;"><strong>RSI</strong><br/><span style="opacity:0.7;">Overbought/oversold (0–100). &gt;70 = sell signal, &lt;30 = buy signal</span></div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;"><strong>MACD</strong><br/><span style="opacity:0.7;">Trend momentum. Signal line crossover = direction change</span></div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;"><strong>Bollinger Bands</strong><br/><span style="opacity:0.7;">Price touching lower band = potential bounce. Upper = caution.</span></div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;"><strong>EMA 20/50/200</strong><br/><span style="opacity:0.7;">Moving avg crossovers. Golden cross = bullish, death cross = bearish</span></div>
+    </div>
+  </div>
+
+  <!-- Layer 2 -->
+  <div style="background:rgba(154,215,160,0.1);border:1px solid rgba(154,215,160,0.3);border-radius:10px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:rgba(154,215,160,0.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">2</div>
+      <div>
+        <div style="font-weight:700;color:#9ad7a0;">Forecasting Layer (ARIMA + GARCH)</div>
+        <div style="font-size:0.85em;opacity:0.8;margin-top:4px;">Statistical models for price direction and volatility — where confidence bands come from</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:0.82em;">
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+        <strong style="color:#9ad7a0;">ARIMA</strong> — Price direction forecast<br/>
+        <span style="opacity:0.7;">Looks at historical price patterns to estimate the most likely direction over the next 1–5 days. Outputs: "65% probability up, target $185–$192 range"</span>
+      </div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+        <strong style="color:#9ad7a0;">GARCH</strong> — Volatility forecast<br/>
+        <span style="opacity:0.7;">Estimates how wild price swings could get. High GARCH = wider confidence band = more uncertainty. "Expected move: ±4.2% over next 5 days"</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 3 -->
+  <div style="background:rgba(246,173,85,0.1);border:1px solid rgba(246,173,85,0.3);border-radius:10px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:rgba(246,173,85,0.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">3</div>
+      <div>
+        <div style="font-weight:700;color:#f6ad55;">Smart Money Overlay</div>
+        <div style="font-size:0.85em;opacity:0.8;margin-top:4px;">Boosts or dampens technical signals based on what large players are doing</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:12px;font-size:0.82em;">
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;"><strong>13F Filings</strong><br/><span style="opacity:0.7;">Buffett/Ackman/Burry added this stock? +1 conviction boost</span></div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;"><strong>ARK Flows</strong><br/><span style="opacity:0.7;">Cathie Wood buying? Adds growth signal for tech/crypto-adjacent</span></div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;"><strong>Whale Wallets</strong><br/><span style="opacity:0.7;">Large BTC/ETH/SOL wallet accumulation = crypto buy signal</span></div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;"><strong>Congress Trades</strong><br/><span style="opacity:0.7;">Party-in-power member buys before legislation = high-value signal</span></div>
+    </div>
+  </div>
+
+  <!-- Layer 4 -->
+  <div style="background:rgba(183,148,246,0.1);border:1px solid rgba(183,148,246,0.3);border-radius:10px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:rgba(183,148,246,0.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">4</div>
+      <div>
+        <div style="font-weight:700;color:#b794f6;">Signal Combiner + Scorer</div>
+        <div style="font-size:0.85em;opacity:0.8;margin-top:4px;">Weights all signals into a single score per ticker — this is what drives the recommendation</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;background:rgba(0,0,0,0.25);border-radius:8px;padding:14px;font-size:0.85em;">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;">
+        <div>Technical indicators (RSI + MACD + Bollinger + EMA)</div><div style="color:#b794f6;font-weight:600;">35%</div>
+        <div>ARIMA price direction forecast</div><div style="color:#b794f6;font-weight:600;">25%</div>
+        <div>Smart money overlay (13F + ARK + Congress + Whale)</div><div style="color:#b794f6;font-weight:600;">25%</div>
+        <div>News sentiment (positive/negative/neutral)</div><div style="color:#b794f6;font-weight:600;">15%</div>
+      </div>
+      <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;">
+        Final score → <strong style="color:#9ad7a0;">BUY</strong> (score &gt;0.65) | <strong style="color:#f6ad55;">WATCH</strong> (0.4–0.65) | <strong style="color:#fc8181;">AVOID</strong> (&lt;0.4)
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 5 -->
+  <div style="background:rgba(237,137,54,0.1);border:1px solid rgba(237,137,54,0.3);border-radius:10px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:rgba(237,137,54,0.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">5</div>
+      <div>
+        <div style="font-weight:700;color:#ed8936;">Monte Carlo Confidence Bands</div>
+        <div style="font-size:0.85em;opacity:0.8;margin-top:4px;">Runs 1,000 simulations to show the range of outcomes — not just a single number</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;background:rgba(0,0,0,0.25);border-radius:8px;padding:14px;font-size:0.85em;">
+      Example output for AMZN:<br/>
+      <div style="margin-top:8px;font-family:monospace;background:rgba(0,0,0,0.3);padding:10px;border-radius:6px;line-height:1.8;">
+        Signal: <span style="color:#9ad7a0;">BUY</span> · Confidence: <span style="color:#ed8936;">72%</span><br/>
+        5-day forecast: $195.40 (base) · Range: $188–$203 (80% CI)<br/>
+        Downside risk: -3.8% · Upside potential: +4.4%<br/>
+        GARCH volatility: moderate (±2.1%/day)<br/>
+        Smart money: 2 of 4 signals confirming
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer 6 -->
+  <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:rgba(99,179,237,0.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">6</div>
+      <div>
+        <div style="font-weight:700;color:#63b3ed;">Backtester</div>
+        <div style="font-size:0.85em;opacity:0.8;margin-top:4px;">Before any signal goes live, it's validated on 2 years of historical data</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:0.85em;opacity:0.8;">Calculates win rate, Sharpe ratio, max drawdown, and average return per trade for the combined signal model. This is what Month 1 paper trading validates in live conditions.</div>
+  </div>
+
+</div>
+
+<p style="text-align:center;margin-top:16px;opacity:0.6;font-size:0.85em;">Does this model make sense? Any layers you want to add, remove, or adjust weights on? Reply in terminal.</p>

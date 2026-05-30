@@ -1,0 +1,67 @@
+<h2>Research Summary — What We Know So Far</h2>
+<p class="subtitle">Before we start designing, here's what the articles + your portfolio context tell us we need to build</p>
+
+<div class="section">
+  <h3>Your Portfolio (the system must understand this)</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;">
+    <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:14px;">
+      <div class="label">US Stocks</div>
+      <div style="font-size:1.1em;font-weight:600;margin-top:4px;">FUBO, AMZN, GOOG, META, UBER, SHOP, QCOM, MSTR, GLD, SLV, NFTY, INFQ</div>
+      <div style="opacity:0.6;font-size:0.85em;margin-top:6px;">Across Robinhood · Schwab · Fidelity</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:14px;">
+      <div class="label">Crypto</div>
+      <div style="font-size:1.1em;font-weight:600;margin-top:4px;">BTC, ETH, XRP, SOL, AAVE</div>
+      <div style="opacity:0.6;font-size:0.85em;margin-top:6px;">~$78K total · Robinhood + Ledger</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:14px;">
+      <div class="label">Special Situation</div>
+      <div style="font-size:1.1em;font-weight:600;margin-top:4px;">FUBO RSUs — 3,270 vested + $71K unvested</div>
+      <div style="opacity:0.6;font-size:0.85em;margin-top:6px;">⚠️ Insider position — blackout periods apply</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Required System Layers (from quant roadmap + algo trading research)</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+    <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:8px;padding:14px;">
+      <div class="label" style="color:#63b3ed;">Data Layer</div>
+      <div style="margin-top:6px;font-size:0.9em;">Market prices · News feeds · 13F filings (smart money) · SEC EDGAR · Crypto on-chain data</div>
+      <div style="margin-top:8px;font-size:0.8em;opacity:0.6;">Free: yfinance · Paid: Polygon.io $200/mo</div>
+    </div>
+    <div style="background:rgba(154,215,160,0.1);border:1px solid rgba(154,215,160,0.3);border-radius:8px;padding:14px;">
+      <div class="label" style="color:#9ad7a0;">Quant Model Layer</div>
+      <div style="margin-top:6px;font-size:0.9em;">ARIMA/GARCH time series · Technical indicators · Signal generation · Backtesting · Monte Carlo confidence bands</div>
+    </div>
+    <div style="background:rgba(246,173,85,0.1);border:1px solid rgba(246,173,85,0.3);border-radius:8px;padding:14px;">
+      <div class="label" style="color:#f6ad55;">Risk Management Layer</div>
+      <div style="margin-top:6px;font-size:0.9em;">ATR-based stops · Position sizing · Portfolio heat · VaR · Drawdown limits · FUBO blackout enforcement</div>
+    </div>
+    <div style="background:rgba(183,148,246,0.1);border:1px solid rgba(183,148,246,0.3);border-radius:8px;padding:14px;">
+      <div class="label" style="color:#b794f6;">Smart Money Tracker</div>
+      <div style="margin-top:6px;font-size:0.9em;">SEC 13F filings (quarterly) · ARK ETF moves · Whale wallet tracking (crypto) · Options flow analysis</div>
+    </div>
+    <div style="background:rgba(237,137,54,0.1);border:1px solid rgba(237,137,54,0.3);border-radius:8px;padding:14px;">
+      <div class="label" style="color:#ed8936;">Autonomous Trading Layer</div>
+      <div style="margin-top:6px;font-size:0.9em;">Alpaca API (paper + live) · Signal → order execution · $5K ring-fenced account</div>
+      <div style="margin-top:6px;font-size:0.8em;background:rgba(237,137,54,0.2);border-radius:4px;padding:4px 8px;">⚠️ High risk — real financial implications</div>
+    </div>
+    <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:8px;padding:14px;">
+      <div class="label" style="color:#63b3ed;">Daily Briefing Layer</div>
+      <div style="margin-top:6px;font-size:0.9em;">Morning market scan → Claude analysis → Slack message. Uses your existing n8n on DigitalOcean (204.48.17.22)</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="background:rgba(252,129,129,0.08);border:1px solid rgba(252,129,129,0.3);border-radius:8px;padding:16px;">
+  <h3 style="color:#fc8181;">⚠️ What I Cannot Guarantee</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;font-size:0.9em;">
+    <div>❌ Positive returns on the $5K (any model can lose money)</div>
+    <div>❌ Perfect predictions — all signals have confidence ranges, not certainties</div>
+    <div>❌ SEC/FINRA compliance advice (you need a CPA/attorney for that)</div>
+    <div>❌ Real-time data without paid subscriptions for live execution</div>
+  </div>
+</div>
+
+<p style="text-align:center;margin-top:20px;opacity:0.7;font-size:0.9em;">First clarifying question coming up in the terminal →</p>

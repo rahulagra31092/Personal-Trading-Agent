@@ -1,0 +1,122 @@
+<h2>Quant Model — Updated with 2 New Layers</h2>
+<p class="subtitle">8 layers total. Layers 7 and 8 are the new additions.</p>
+
+<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px;">
+
+  <!-- Layer 1 -->
+  <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="background:rgba(99,179,237,0.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85em;flex-shrink:0;">1</div>
+      <div style="font-weight:700;color:#63b3ed;">Technical Indicators</div>
+      <div style="opacity:0.6;font-size:0.8em;margin-left:4px;">RSI · MACD · Bollinger Bands · EMA 20/50/200 · ATR stops · Volume confirmation</div>
+    </div>
+  </div>
+
+  <!-- Layer 2 -->
+  <div style="background:rgba(154,215,160,0.1);border:1px solid rgba(154,215,160,0.3);border-radius:10px;padding:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="background:rgba(154,215,160,0.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85em;flex-shrink:0;">2</div>
+      <div style="font-weight:700;color:#9ad7a0;">Forecasting (ARIMA + GARCH)</div>
+      <div style="opacity:0.6;font-size:0.8em;margin-left:4px;">Price direction 1–5 days · Volatility forecast · Confidence band source</div>
+    </div>
+  </div>
+
+  <!-- Layer 3 -->
+  <div style="background:rgba(246,173,85,0.1);border:1px solid rgba(246,173,85,0.3);border-radius:10px;padding:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="background:rgba(246,173,85,0.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85em;flex-shrink:0;">3</div>
+      <div style="font-weight:700;color:#f6ad55;">Smart Money Overlay</div>
+      <div style="opacity:0.6;font-size:0.8em;margin-left:4px;">13F filings · ARK flows · Crypto whale wallets · Congress STOCK Act</div>
+    </div>
+  </div>
+
+  <!-- Layer 4 -->
+  <div style="background:rgba(183,148,246,0.1);border:1px solid rgba(183,148,246,0.3);border-radius:10px;padding:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="background:rgba(183,148,246,0.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85em;flex-shrink:0;">4</div>
+      <div style="font-weight:700;color:#b794f6;">Signal Combiner + Scorer</div>
+      <div style="opacity:0.6;font-size:0.8em;margin-left:4px;">Weighted composite → BUY / WATCH / AVOID with confidence %</div>
+    </div>
+  </div>
+
+  <!-- Layer 5 -->
+  <div style="background:rgba(237,137,54,0.1);border:1px solid rgba(237,137,54,0.3);border-radius:10px;padding:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="background:rgba(237,137,54,0.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85em;flex-shrink:0;">5</div>
+      <div style="font-weight:700;color:#ed8936;">Monte Carlo Confidence Bands</div>
+      <div style="opacity:0.6;font-size:0.8em;margin-left:4px;">1,000 simulations · Price range · Downside/upside %</div>
+    </div>
+  </div>
+
+  <!-- Layer 6 -->
+  <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="background:rgba(99,179,237,0.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85em;flex-shrink:0;">6</div>
+      <div style="font-weight:700;color:#63b3ed;">Backtester</div>
+      <div style="opacity:0.6;font-size:0.8em;margin-left:4px;">2yr historical validation · Lookahead bias prevention · Survivorship bias protection</div>
+    </div>
+  </div>
+
+  <!-- Layer 7 — NEW -->
+  <div style="background:rgba(252,129,129,0.12);border:2px solid rgba(252,129,129,0.5);border-radius:10px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="background:rgba(252,129,129,0.4);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85em;flex-shrink:0;">7</div>
+      <div style="font-weight:700;color:#fc8181;">Earnings Layer</div>
+      <div style="background:rgba(252,129,129,0.2);border-radius:4px;padding:2px 8px;font-size:0.75em;color:#fc8181;margin-left:4px;">NEW</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:0.82em;">
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+        <strong style="color:#fc8181;">Pre-Earnings Setup</strong><br/>
+        <span style="opacity:0.75;">Is the stock already pricing in a beat (run-up = sell-the-news risk) or a miss (beaten down = surprise pop potential)?</span>
+      </div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+        <strong style="color:#fc8181;">Beat/Miss History + Direction</strong><br/>
+        <span style="opacity:0.75;">Historical EPS beat rate per company. Analyst consensus vs implied whisper. Post-earnings 5-day drift direction.</span>
+      </div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+        <strong style="color:#fc8181;">Implied Move (options-implied)</strong><br/>
+        <span style="opacity:0.75;">Options market implied ±% move. If actual move exceeds implied = strong continuation signal. If below = reversal risk.</span>
+      </div>
+    </div>
+    <div style="margin-top:10px;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;font-size:0.82em;">
+      <strong>Example output:</strong> <span style="font-family:monospace;">AMZN earnings May 22 · Beat rate: 78% · Pre-setup: neutral (no run-up) · Implied move: ±5.2% · Recommendation: WATCH — favorable setup if holding through earnings · Post-earnings drift signal activates day+1</span>
+    </div>
+  </div>
+
+  <!-- Layer 8 — NEW -->
+  <div style="background:rgba(129,230,217,0.1);border:2px solid rgba(129,230,217,0.4);border-radius:10px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="background:rgba(129,230,217,0.3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85em;flex-shrink:0;">8</div>
+      <div style="font-weight:700;color:#81e6d9;">News Reaction Layer</div>
+      <div style="background:rgba(129,230,217,0.2);border-radius:4px;padding:2px 8px;font-size:0.75em;color:#81e6d9;margin-left:4px;">NEW</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82em;">
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+        <strong style="color:#81e6d9;">News Classification + Historical Reaction</strong><br/>
+        <span style="opacity:0.75;">Claude classifies each news item (regulatory, product, macro, insider, partnership). Cross-references with historical: "When GOOG got antitrust news, it dropped -2.8% next day in 7 of 9 cases."</span>
+      </div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;">
+        <strong style="color:#81e6d9;">News-Price Divergence Signal</strong><br/>
+        <span style="opacity:0.75;">The most powerful signal: stock DROPS on good news = bearish reversal. Stock HOLDS on bad news = bullish strength. These divergences outperform pure sentiment by a wide margin.</span>
+      </div>
+    </div>
+    <div style="margin-top:10px;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;font-size:0.82em;">
+      <strong>Example output:</strong> <span style="font-family:monospace;">META — Partnership announcement (positive) · Stock reaction: -1.2% (negative divergence) · Historical: similar news = +2.1% avg · Signal: BEARISH — market not believing this news · Confidence: 68%</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Updated weights -->
+<div style="margin-top:16px;background:rgba(183,148,246,0.1);border:1px solid rgba(183,148,246,0.3);border-radius:10px;padding:16px;">
+  <h3 style="margin-top:0;color:#b794f6;">Updated Signal Weights (Layer 4)</h3>
+  <div style="display:grid;grid-template-columns:1fr auto;gap:6px;font-size:0.85em;align-items:center;max-width:500px;">
+    <div>Technical indicators (RSI, MACD, Bollinger, EMA, ATR, Volume)</div><div style="color:#b794f6;font-weight:600;">30%</div>
+    <div>ARIMA price direction forecast</div><div style="color:#b794f6;font-weight:600;">20%</div>
+    <div>Smart money overlay (13F + ARK + Congress + Whale)</div><div style="color:#b794f6;font-weight:600;">20%</div>
+    <div>News reaction layer (classification + divergence)</div><div style="color:#b794f6;font-weight:600;">15%</div>
+    <div>Earnings layer (setup + beat rate + drift)</div><div style="color:#b794f6;font-weight:600;">15%</div>
+  </div>
+</div>
+
+<p style="text-align:center;margin-top:16px;opacity:0.6;font-size:0.85em;">Does this look complete? Reply in terminal — then we move to Section 3 (3-phase rollout + daily briefing format)</p>
