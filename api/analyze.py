@@ -1,4 +1,5 @@
 import logging
+import re
 
 from fastapi import APIRouter, HTTPException
 
@@ -16,9 +17,13 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+_TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
+
 
 def analyze_ticker(ticker: str) -> dict:
     ticker = ticker.strip().upper()
+    if not _TICKER_RE.match(ticker):
+        raise ValueError(f"Invalid ticker format: {ticker!r}")
     if config.is_excluded(ticker):
         raise ValueError(f"{ticker} is excluded from analysis")
 
@@ -45,7 +50,7 @@ def analyze_ticker(ticker: str) -> dict:
         earnings_score=earnings_score,
     )
 
-    mc = run_monte_carlo(current_price, max(garch["daily_vol"], 0.001), seed=42)
+    mc = run_monte_carlo(current_price, max(garch["daily_vol"], 0.001))
 
     return {
         "ticker": ticker,
@@ -65,6 +70,6 @@ def get_analyze(ticker: str):
         return analyze_ticker(ticker)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    except Exception as exc:
+    except Exception:
         logger.exception("Analysis failed for %s", ticker)
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {exc}")
+        raise HTTPException(status_code=500, detail="Internal analysis error. Check server logs.")
