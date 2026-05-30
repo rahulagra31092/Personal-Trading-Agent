@@ -18,7 +18,7 @@ def compute_signal(
         4,
     )
 
-    label = "BUY" if composite > 0.65 else ("AVOID" if composite < 0.40 else "WATCH")
+    label = "BUY" if composite > 0.58 else ("AVOID" if composite < 0.42 else "WATCH")
 
     return {
         "composite_score": composite,

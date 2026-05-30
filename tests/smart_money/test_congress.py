@@ -40,5 +40,6 @@ def test_old_trades_excluded():
 
 def test_get_congress_trades_returns_list_without_api_key(monkeypatch):
     monkeypatch.setattr("smart_money.congress._QUIVER_API_KEY", None)
-    result = get_congress_trades("AAPL")
+    with patch("smart_money.congress.get_cache", return_value=None):
+        result = get_congress_trades("AAPL")
     assert result == []

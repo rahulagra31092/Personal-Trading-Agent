@@ -44,7 +44,7 @@ def compute_indicators(bars: list[dict]) -> dict:
         1.0 if rsi_val < 35 else (0.0 if rsi_val > 65 else 0.5),
         1.0 if latest_macd > latest_signal else 0.0,
         1.0 - bb_position,
-        _ema_score(ema20, ema50, ema200),
+        _ema_score(ema20, ema50, ema200, rsi_val),
         1.0 if volume_confirmed else 0.5,
     ]
 
@@ -84,18 +84,22 @@ def _atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) ->
     return tr.rolling(period).mean()
 
 
-def _ema_score(ema20: pd.Series, ema50: pd.Series | None, ema200: pd.Series | None) -> float:
+def _ema_score(ema20: pd.Series, ema50: pd.Series | None, ema200: pd.Series | None, rsi: float = 50.0) -> float:
     v20 = float(ema20.iloc[-1])
     if ema50 is None:
         return 0.5
     v50 = float(ema50.iloc[-1])
     if ema200 is None:
-        return 1.0 if v20 > v50 else 0.0
+        if v20 > v50:
+            return 1.0
+        # Bearish trend: oversold stocks get partial credit as recovery candidates
+        return 0.35 if rsi < 35 else 0.0
     v200 = float(ema200.iloc[-1])
     if v20 > v50 > v200:
         return 1.0
     if v20 < v50:
-        return 0.0
+        # Bearish trend: oversold stocks get partial credit as recovery candidates
+        return 0.35 if rsi < 35 else 0.0
     return 0.5
 
 
