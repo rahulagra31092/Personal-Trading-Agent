@@ -17,7 +17,7 @@ _FAKE_BUY = {
     "atr_stop": 842.0,
     "vol_regime": "medium",
     "rsi": 55.0,
-    "ema_trend": "bullish",
+    "trend_regime": "bullish",
 }
 
 _FAKE_WATCH = {
@@ -35,7 +35,7 @@ _FAKE_WATCH = {
     "atr_stop": 185.0,
     "vol_regime": "low",
     "rsi": 50.0,
-    "ema_trend": "neutral",
+    "trend_regime": "neutral",
 }
 
 

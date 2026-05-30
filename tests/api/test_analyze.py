@@ -65,11 +65,12 @@ def test_analyze_returns_required_keys():
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \
-         patch("api.analyze.compute_earnings_score", return_value=0.5):
+         patch("api.analyze.compute_earnings_score", return_value=0.5), \
+         patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/AAPL")
     assert resp.status_code == 200
     data = resp.json()
-    for key in ("ticker", "signal", "confidence", "current_price", "atr_stop", "vol_regime"):
+    for key in ("ticker", "signal", "confidence", "current_price", "atr_stop", "vol_regime", "trend_regime", "trade_card"):
         assert key in data
 
 
@@ -86,7 +87,8 @@ def test_analyze_signal_has_label():
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \
-         patch("api.analyze.compute_earnings_score", return_value=0.5):
+         patch("api.analyze.compute_earnings_score", return_value=0.5), \
+         patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/MSFT")
     assert resp.json()["signal"]["label"] in ("BUY", "WATCH", "AVOID")
 
@@ -99,7 +101,8 @@ def test_analyze_confidence_has_prob_success():
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_congress_score", return_value=0.5), \
          patch("api.analyze.compute_news_score", return_value=0.5), \
-         patch("api.analyze.compute_earnings_score", return_value=0.5):
+         patch("api.analyze.compute_earnings_score", return_value=0.5), \
+         patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/NVDA")
     conf = resp.json()["confidence"]
     assert "prob_success" in conf
@@ -161,7 +164,7 @@ def test_analyze_trend_regime_present():
         resp = client.get("/analyze/AAPL")
     data = resp.json()
     assert "trend_regime" in data
-    assert data["trend_regime"] in ("bullish", "bearish", "neutral")
+    assert data["trend_regime"] == "bullish"   # matches _FAKE_IND["ema_trend"]
 
 
 def test_analyze_trade_card_rr_ratio():
