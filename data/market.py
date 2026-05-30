@@ -6,12 +6,13 @@ import config
 
 
 def get_daily_bars(ticker: str, days: int = 30) -> list[dict]:
+    ticker = ticker.strip().upper()
     if config.is_excluded(ticker):
         raise ValueError(f"{ticker} is excluded from analysis")
 
     cache_key = f"bars:{ticker}:{days}"
     cached = get_cache(cache_key)
-    if cached:
+    if cached is not None:
         return cached
 
     client = RESTClient(config.POLYGON_API_KEY)
@@ -22,6 +23,8 @@ def get_daily_bars(ticker: str, days: int = 30) -> list[dict]:
         {"t": b.timestamp, "o": b.open, "h": b.high, "l": b.low, "c": b.close, "v": b.volume}
         for b in client.list_aggs(ticker, 1, "day", str(start), str(end))
     ]
+    if not bars:
+        raise ValueError(f"No bars returned for {ticker}")
 
     result = bars[-days:] if len(bars) >= days else bars
     set_cache(cache_key, result, ttl_seconds=3600)
@@ -29,12 +32,13 @@ def get_daily_bars(ticker: str, days: int = 30) -> list[dict]:
 
 
 def get_historical_prices(ticker: str, years: int = 2) -> list[dict]:
+    ticker = ticker.strip().upper()
     if config.is_excluded(ticker):
         raise ValueError(f"{ticker} is excluded from analysis")
 
     cache_key = f"hist:{ticker}:{years}"
     cached = get_cache(cache_key)
-    if cached:
+    if cached is not None:
         return cached
 
     hist = yf.Ticker(ticker).history(period=f"{years}y", auto_adjust=True)
@@ -48,9 +52,10 @@ def get_historical_prices(ticker: str, years: int = 2) -> list[dict]:
 
 
 def get_crypto_price(symbol: str) -> float:
+    symbol = symbol.strip().upper()
     cache_key = f"crypto:{symbol}"
     cached = get_cache(cache_key)
-    if cached:
+    if cached is not None:
         return cached["price"]
 
     hist = yf.Ticker(f"{symbol}-USD").history(period="1d")
