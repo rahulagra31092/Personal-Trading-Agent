@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from quant.backtest import run_backtest
 
 
@@ -44,3 +43,24 @@ def test_too_few_bars_returns_zero_signals():
 def test_correct_signals_le_total():
     result = run_backtest("AMZN", _trending_bars(100))
     assert result["correct_signals"] <= result["total_signals"]
+
+
+def test_lookahead_safe():
+    bars = _trending_bars(40)
+    call_sizes = []
+
+    import quant.backtest as bt
+    _real = bt.compute_indicators
+    def spy(history):
+        call_sizes.append(len(history))
+        return _real(history)
+    bt.compute_indicators = spy
+    try:
+        run_backtest("TEST", bars, min_bars=30, hold_days=5)
+    finally:
+        bt.compute_indicators = _real
+
+    # At i=30 (first iteration), history = bars[:30], length must be 30
+    # If bars[:i+1] were used, call_sizes[0] would be 31
+    assert call_sizes, "No iterations ran — check min_bars/hold_days"
+    assert call_sizes[0] == 30

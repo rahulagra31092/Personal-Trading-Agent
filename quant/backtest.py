@@ -1,6 +1,10 @@
+import logging
+
 from quant.indicators import compute_indicators
 from quant.forecast import compute_arima_score
 from quant.signals import compute_signal
+
+logger = logging.getLogger(__name__)
 
 
 def run_backtest(
@@ -21,7 +25,8 @@ def run_backtest(
                 technical_score=ind["technical_score"],
                 arima_score=fcast["arima_score"],
             )
-        except Exception:
+        except Exception as exc:
+            logger.debug("Skipping bar %d: %s", i, exc)
             continue
 
         if sig["label"] == "WATCH":
@@ -29,16 +34,17 @@ def run_backtest(
 
         signal_price = float(bars[i]["c"])
         future_price = float(bars[i + hold_days]["c"])
-        correct = (
-            (sig["label"] == "BUY" and future_price > signal_price)
-            or (sig["label"] == "AVOID" and future_price < signal_price)
-        )
+        if sig["label"] == "BUY":
+            strategy_return = (future_price - signal_price) / signal_price
+        else:  # AVOID
+            strategy_return = (signal_price - future_price) / signal_price
+
         signals_log.append({
             "label": sig["label"],
             "signal_price": signal_price,
             "future_price": future_price,
-            "return_pct": abs(future_price - signal_price) / signal_price,
-            "correct": correct,
+            "return_pct": round(strategy_return, 6),
+            "correct": strategy_return > 0,
         })
 
     if not signals_log:
