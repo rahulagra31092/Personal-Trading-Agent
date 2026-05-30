@@ -46,6 +46,12 @@ def days_to_earnings(ticker: str) -> int | None:
     return (date.fromisoformat(cal["next_earnings_date"]) - today_et).days
 
 
+def get_eps_beat_rate(ticker: str) -> float | None:
+    """Return fraction of last N quarters where EPS beat estimate, or None if unavailable."""
+    cal = get_earnings_calendar(ticker)
+    return cal.get("eps_beat_rate")
+
+
 def _calculate_beat_rate(ticker_obj: yf.Ticker) -> float | None:
     try:
         history = ticker_obj.earnings_history
