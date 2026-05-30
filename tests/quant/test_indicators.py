@@ -38,7 +38,7 @@ def test_rsi_bounded():
 
 
 def test_too_few_bars_raises():
-    with pytest.raises(ValueError, match="at least 15 bars"):
+    with pytest.raises(ValueError, match="at least 20 bars"):
         compute_indicators(_make_bars(10))
 
 
@@ -54,3 +54,24 @@ def test_volume_confirmed_is_bool():
 
 def test_bb_position_bounded():
     assert 0.0 <= compute_indicators(_make_bars(60))["bb_position"] <= 1.0
+
+
+def test_minimum_bars_boundary():
+    result = compute_indicators(_make_bars(20))
+    assert "technical_score" in result
+
+
+def test_flat_price_raises_or_returns_half():
+    bars = [{"t": i, "o": 100.0, "h": 100.0, "l": 100.0, "c": 100.0, "v": 1_000_000}
+            for i in range(30)]
+    try:
+        result = compute_indicators(bars)
+        assert result["bb_position"] == 0.5
+    except ValueError:
+        pass  # NaN guard triggered — acceptable
+
+
+def test_monotone_uptrend_no_nan():
+    bars = _make_bars(30, trend=0.01, seed=1)
+    result = compute_indicators(bars)
+    assert not (result["rsi"] != result["rsi"])  # NaN check: NaN != NaN is True
