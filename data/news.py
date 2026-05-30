@@ -26,8 +26,13 @@ def get_ticker_news(ticker: str, days: int = 3) -> list[dict]:
     resp.raise_for_status()
 
     result = [
-        {"title": a["title"], "description": a.get("description", ""), "publishedAt": a["publishedAt"]}
+        {
+            "title": a.get("title") or "",
+            "description": a.get("description") or "",
+            "publishedAt": a.get("publishedAt") or "",
+        }
         for a in resp.json().get("articles", [])
+        if a.get("title")  # skip [Removed] placeholder articles
     ]
     set_cache(cache_key, result, ttl_seconds=3600)
     return result
