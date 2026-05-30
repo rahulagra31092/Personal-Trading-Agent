@@ -59,6 +59,8 @@ def test_bb_position_bounded():
 def test_minimum_bars_boundary():
     result = compute_indicators(_make_bars(20))
     assert "technical_score" in result
+    assert 0.0 <= result["rsi"] <= 100.0
+    assert 0.0 <= result["technical_score"] <= 1.0
 
 
 def test_flat_price_raises_or_returns_half():

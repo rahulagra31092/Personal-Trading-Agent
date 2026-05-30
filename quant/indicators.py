@@ -1,9 +1,9 @@
+import math
 import numpy as np
 import pandas as pd
 
 
 def _require_finite(val: float, name: str) -> float:
-    import math
     if math.isnan(val) or math.isinf(val):
         raise ValueError(f"Indicator '{name}' produced NaN/Inf — input data may be degenerate or insufficient.")
     return val
