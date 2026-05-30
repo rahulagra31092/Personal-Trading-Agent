@@ -76,3 +76,15 @@ def test_portfolio_pnl_computes_totals():
     assert "total_pnl" in data
     assert "total_pnl_pct" in data
     assert data["total_cost"] == pytest.approx(10.0 * 100.0 + 5.0 * 200.0)
+
+
+def test_portfolio_pnl_fetch_failure_returns_none_fields():
+    holdings = [{"ticker": "AAPL", "shares": 10.0, "cost_basis": 150.0}]
+    with patch("api.portfolio.load_holdings", return_value=holdings), \
+         patch("api.portfolio.get_daily_bars", side_effect=RuntimeError("timeout")):
+        resp = client.get("/portfolio/pnl")
+    assert resp.status_code == 200
+    pos = resp.json()["positions"][0]
+    assert pos["current_price"] is None
+    assert pos["atr_stop"] is None
+    assert pos["below_stop"] is None
