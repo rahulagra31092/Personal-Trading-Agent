@@ -1,3 +1,5 @@
+import pytest
+
 from quant.confidence import run_monte_carlo
 
 
@@ -32,3 +34,8 @@ def test_high_vol_widens_bands():
 def test_zero_drift_prob_success_near_half():
     r = run_monte_carlo(100.0, 0.02, days=5, simulations=10_000, seed=42)
     assert 0.40 <= r["prob_success"] <= 0.60
+
+
+def test_zero_vol_raises():
+    with pytest.raises(ValueError, match="daily_vol must be positive"):
+        run_monte_carlo(100.0, 0.0, seed=42)

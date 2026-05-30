@@ -8,6 +8,8 @@ def run_monte_carlo(
     simulations: int = 1_000,
     seed: int | None = None,
 ) -> dict:
+    if daily_vol <= 0:
+        raise ValueError(f"daily_vol must be positive, got {daily_vol}")
     rng = np.random.default_rng(seed)
     # GBM with zero drift: log-returns ~ N(0, daily_vol)
     log_returns = rng.normal(0.0, daily_vol, size=(simulations, days))
