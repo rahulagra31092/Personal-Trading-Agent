@@ -38,3 +38,28 @@ def test_exception_returns_neutral():
         side_effect=Exception("network error"),
     ):
         assert compute_earnings_score("AAPL") == 0.5
+
+
+def test_boundary_7_days_is_imminent():
+    with patch("smart_money.earnings_scorer.days_to_earnings", return_value=7):
+        assert compute_earnings_score("AAPL") == 0.2
+
+
+def test_boundary_8_days_is_approaching():
+    with patch("smart_money.earnings_scorer.days_to_earnings", return_value=8):
+        assert compute_earnings_score("AAPL") == 0.55
+
+
+def test_boundary_30_days_is_approaching():
+    with patch("smart_money.earnings_scorer.days_to_earnings", return_value=30):
+        assert compute_earnings_score("AAPL") == 0.55
+
+
+def test_boundary_31_days_is_neutral():
+    with patch("smart_money.earnings_scorer.days_to_earnings", return_value=31):
+        assert compute_earnings_score("AAPL") == 0.5
+
+
+def test_earnings_day_itself_returns_high():
+    with patch("smart_money.earnings_scorer.days_to_earnings", return_value=0):
+        assert compute_earnings_score("AAPL") == 0.7

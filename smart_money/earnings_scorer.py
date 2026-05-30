@@ -1,10 +1,15 @@
+import logging
+
 from data.earnings import days_to_earnings
+
+logger = logging.getLogger(__name__)
 
 
 def compute_earnings_score(ticker: str) -> float:
     try:
         days = days_to_earnings(ticker)
-    except Exception:
+    except Exception as exc:
+        logger.warning("days_to_earnings failed for %s: %s", ticker, exc)
         return 0.5
 
     if days is None or days > 30:
