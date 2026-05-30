@@ -47,6 +47,14 @@ _FAKE_MC = {
     "prob_success": 0.54,
     "daily_vol_expected": 0.018,
 }
+_FAKE_TRADE_CARD = {
+    "entry_price": 100.0,
+    "stop_loss": 95.0,
+    "take_profit": 115.0,
+    "risk_per_share": 5.0,
+    "reward_per_share": 15.0,
+    "risk_reward_ratio": 3.0,
+}
 
 
 def test_analyze_returns_required_keys():
@@ -120,3 +128,51 @@ def test_analyze_system_error_returns_500():
     with patch("api.analyze.get_daily_bars", side_effect=RuntimeError("polygon down")):
         resp = client.get("/analyze/TSLA")
     assert resp.status_code == 500
+
+
+def test_analyze_trade_card_present():
+    with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
+         patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
+         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
+         patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
+         patch("api.analyze.compute_congress_score", return_value=0.5), \
+         patch("api.analyze.compute_news_score", return_value=0.5), \
+         patch("api.analyze.compute_earnings_score", return_value=0.5), \
+         patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
+        resp = client.get("/analyze/AAPL")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "trade_card" in data
+    for key in ("entry_price", "stop_loss", "take_profit", "risk_reward_ratio"):
+        assert key in data["trade_card"]
+
+
+def test_analyze_trend_regime_present():
+    with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
+         patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
+         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
+         patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
+         patch("api.analyze.compute_congress_score", return_value=0.5), \
+         patch("api.analyze.compute_news_score", return_value=0.5), \
+         patch("api.analyze.compute_earnings_score", return_value=0.5), \
+         patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
+        resp = client.get("/analyze/AAPL")
+    data = resp.json()
+    assert "trend_regime" in data
+    assert data["trend_regime"] in ("bullish", "bearish", "neutral")
+
+
+def test_analyze_trade_card_rr_ratio():
+    with patch("api.analyze.get_daily_bars", return_value=_FAKE_BARS), \
+         patch("api.analyze.compute_indicators", return_value=_FAKE_IND), \
+         patch("api.analyze.compute_arima_score", return_value=_FAKE_FCAST), \
+         patch("api.analyze.compute_garch_volatility", return_value=_FAKE_GARCH), \
+         patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
+         patch("api.analyze.compute_congress_score", return_value=0.5), \
+         patch("api.analyze.compute_news_score", return_value=0.5), \
+         patch("api.analyze.compute_earnings_score", return_value=0.5), \
+         patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
+        resp = client.get("/analyze/AAPL")
+    assert resp.json()["trade_card"]["risk_reward_ratio"] == 3.0
