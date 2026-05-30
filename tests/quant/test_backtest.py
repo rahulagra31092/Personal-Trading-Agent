@@ -123,3 +123,26 @@ def test_sharpe_known_value():
         result = run_backtest("AMZN", _trending_bars(100))
         # Pre-computed from seed=42, trend=0.002, hold_days=5, all BUY signals
         assert abs(result["sharpe_ratio"] - EXPECTED_SHARPE) < 0.01, f"got {result['sharpe_ratio']}"
+
+
+def test_max_drawdown_capped_at_one_on_catastrophic_loss():
+    """A sequence leading to large negative equity must not push max_drawdown above 1.0"""
+    import quant.backtest as bt
+
+    # Craft bars where prices crash dramatically
+    crash_bars = []
+    price = 100.0
+    for i in range(50):
+        if i == 35:
+            price = 0.01  # crash to near-zero
+        crash_bars.append({
+            "t": 1700000000000 + i * 86400000,
+            "o": price * 0.999,
+            "h": price * 1.004,
+            "l": price * 0.996,
+            "c": price,
+            "v": 1_500_000,
+        })
+
+    result = run_backtest("TEST", crash_bars)
+    assert result["max_drawdown"] <= 1.0, f"max_drawdown exceeded 1.0: {result['max_drawdown']}"

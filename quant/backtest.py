@@ -86,13 +86,9 @@ def run_backtest(
         equity *= (1.0 + r)
         if equity > peak:
             peak = equity
-        dd = (peak - equity) / peak
+        dd = min((peak - equity) / peak, 1.0) if equity > 0 else 1.0
         if dd > max_dd:
             max_dd = dd
-
-    # Clamp max_drawdown to [0, 1] in case equity goes negative
-    if equity <= 0:
-        max_dd = 1.0  # total wipeout
 
     # Use actual bar span (first to last) not overlapping windows
     first_bar = signals_log[0]["bar_i"]
