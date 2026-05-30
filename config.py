@@ -20,6 +20,7 @@ NEWS_API_KEY = _require("NEWS_API_KEY")
 SLACK_WEBHOOK_URL = _require("SLACK_WEBHOOK_URL")
 SCHWAB_CLIENT_ID: str | None = os.environ.get("SCHWAB_CLIENT_ID") or None
 SCHWAB_CLIENT_SECRET: str | None = os.environ.get("SCHWAB_CLIENT_SECRET") or None
+QUIVER_API_KEY: str | None = os.environ.get("QUIVER_API_KEY") or None
 
 EXCLUDED_TICKERS: frozenset[str] = frozenset({"FUBO"})
 
