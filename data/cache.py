@@ -1,9 +1,20 @@
 import sqlite3
 import json
 import time
+from decimal import Decimal
 from pathlib import Path
 
 DB_PATH = Path(__file__).parent / "cache.db"
+
+
+def _json_default(o: object) -> object:
+    if isinstance(o, Decimal):
+        return str(o)
+    if hasattr(o, "isoformat"):
+        return o.isoformat()
+    if hasattr(o, "item"):  # numpy scalars
+        return o.item()
+    raise TypeError(f"Not JSON serializable: {type(o)}")
 
 def init_db() -> None:
     with sqlite3.connect(DB_PATH) as conn:
@@ -32,5 +43,5 @@ def set_cache(key: str, value: dict, ttl_seconds: int = 3600) -> None:
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
             "INSERT OR REPLACE INTO cache (key, value, expires_at) VALUES (?, ?, ?)",
-            (key, json.dumps(value), expires_at),
+            (key, json.dumps(value, default=_json_default), expires_at),
         )
