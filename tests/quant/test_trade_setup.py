@@ -49,4 +49,18 @@ def test_atr_stop_above_price_clamped():
     # atr_stop > current_price — should not crash
     result = compute_trade_setup(100.0, 105.0)
     assert result["risk_per_share"] == 0.01
-    assert result["take_profit"] > result["entry_price"]
+    assert result["reward_per_share"] == 0.03
+    assert result["take_profit"] == 100.03
+
+
+def test_take_profit_equals_entry_plus_reward():
+    result = compute_trade_setup(99.999, 88.5)
+    assert result["take_profit"] == round(result["entry_price"] + result["reward_per_share"], 2)
+
+
+def test_non_integer_price_and_stop():
+    result = compute_trade_setup(99.999, 88.5)
+    assert result["entry_price"] == 100.0
+    assert result["risk_per_share"] == 11.50
+    assert result["reward_per_share"] == 34.50
+    assert result["take_profit"] == round(result["entry_price"] + result["reward_per_share"], 2)
