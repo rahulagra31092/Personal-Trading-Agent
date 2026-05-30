@@ -29,14 +29,16 @@ def screen_tickers(tickers: list[str]) -> list[dict]:
     return results
 
 
-def build_briefing_message(results: list[dict]) -> str:
+def build_briefing_message(results: list[dict], now: datetime | None = None) -> str:
     buys = sorted(
         [r for r in results if r["signal"]["label"] == "BUY"],
         key=lambda r: r["signal"]["composite_score"],
         reverse=True,
     )
     top = buys[:5]
-    now_et = datetime.now(_ET).strftime("%Y-%m-%d %H:%M ET")
+    if now is None:
+        now = datetime.now(_ET)
+    now_et = now.strftime("%Y-%m-%d %H:%M ET")
     lines = [f"*Trading Analyst — Morning Brief* ({now_et})", ""]
 
     if not top:

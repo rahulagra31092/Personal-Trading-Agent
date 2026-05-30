@@ -1,5 +1,6 @@
 from unittest.mock import patch, MagicMock
 from api.briefing import build_briefing_message, send_slack_briefing, BRIEFING_TICKERS
+import config as _config
 
 _FAKE_BUY = {
     "ticker": "NVDA",
@@ -60,8 +61,10 @@ def test_send_slack_briefing_posts_to_webhook():
         mock_post.return_value.raise_for_status.return_value = None
         send_slack_briefing(["NVDA"])
         mock_post.assert_called_once()
-        _, kwargs = mock_post.call_args
+        args, kwargs = mock_post.call_args
+        assert args[0] == _config.SLACK_WEBHOOK_URL
         assert "text" in kwargs["json"]
+        mock_post.return_value.raise_for_status.assert_called_once()
 
 
 def test_briefing_tickers_is_nonempty_list():
