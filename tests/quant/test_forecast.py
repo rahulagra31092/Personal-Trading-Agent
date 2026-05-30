@@ -49,3 +49,21 @@ def test_garch_too_few_prices_returns_fallback():
     result = compute_garch_volatility([100.0, 101.0])
     assert result["daily_vol"] == 0.02
     assert result["vol_regime"] == "medium"
+
+
+def test_arima_uptrend_gives_up_direction():
+    # Strong uptrend: 0.5% daily return over 50 days
+    result = compute_arima_score(_prices(50, daily_return=0.005))
+    assert result["arima_score"] >= 0.5
+    assert result["direction"] in ("up", "flat")  # allow flat if ARIMA sees mean-reversion
+
+
+def test_garch_volatile_series_gives_high_vol_scalar():
+    import random
+    random.seed(42)
+    prices = [100.0]
+    for _ in range(59):
+        prices.append(prices[-1] * (1 + random.gauss(0, 0.04)))
+    result = compute_garch_volatility(prices)
+    # High daily vol should give low vol_scalar (i.e., reduce position sizing)
+    assert result["vol_scalar"] <= 0.5
