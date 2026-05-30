@@ -64,3 +64,36 @@ def test_lookahead_safe():
     # If bars[:i+1] were used, call_sizes[0] would be 31
     assert call_sizes, "No iterations ran — check min_bars/hold_days"
     assert call_sizes[0] == 30
+
+
+def test_returns_new_metric_keys():
+    result = run_backtest("AMZN", _trending_bars(80))
+    for key in ("sharpe_ratio", "max_drawdown", "cagr"):
+        assert key in result
+
+
+def test_max_drawdown_non_negative():
+    result = run_backtest("AMZN", _trending_bars(100))
+    assert result["max_drawdown"] >= 0.0
+
+
+def test_max_drawdown_le_one():
+    result = run_backtest("AMZN", _trending_bars(100))
+    assert result["max_drawdown"] <= 1.0
+
+
+def test_zero_signals_new_metrics_are_zero():
+    result = run_backtest("AMZN", _trending_bars(20))
+    assert result["sharpe_ratio"] == 0.0
+    assert result["max_drawdown"] == 0.0
+    assert result["cagr"] == 0.0
+
+
+def test_sharpe_is_float():
+    result = run_backtest("AMZN", _trending_bars(100))
+    assert isinstance(result["sharpe_ratio"], float)
+
+
+def test_cagr_reasonable_range():
+    result = run_backtest("AMZN", _trending_bars(100))
+    assert -1.0 <= result["cagr"] <= 10.0

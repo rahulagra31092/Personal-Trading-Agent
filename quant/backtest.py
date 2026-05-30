@@ -1,3 +1,4 @@
+import math
 import logging
 
 from quant.indicators import compute_indicators
@@ -48,15 +49,56 @@ def run_backtest(
         })
 
     if not signals_log:
-        return {"ticker": ticker, "total_signals": 0, "win_rate": 0.0,
-                "correct_signals": 0, "avg_return_pct": 0.0}
+        return {
+            "ticker": ticker,
+            "total_signals": 0,
+            "win_rate": 0.0,
+            "correct_signals": 0,
+            "avg_return_pct": 0.0,
+            "sharpe_ratio": 0.0,
+            "max_drawdown": 0.0,
+            "cagr": 0.0,
+        }
 
+    rets = [s["return_pct"] for s in signals_log]
     total = len(signals_log)
     correct_count = sum(1 for s in signals_log if s["correct"])
+    avg_ret = sum(rets) / total
+
+    # Annualised Sharpe: scale per-trade returns to 252-day year
+    periods_per_year = 252.0 / hold_days
+    if total > 1:
+        variance = sum((r - avg_ret) ** 2 for r in rets) / (total - 1)
+        std_ret = math.sqrt(variance)
+        sharpe = round(avg_ret / std_ret * math.sqrt(periods_per_year), 4) if std_ret > 0 else 0.0
+    else:
+        sharpe = 0.0
+
+    # Build equity curve → max drawdown and CAGR
+    equity = 1.0
+    peak = 1.0
+    max_dd = 0.0
+    for r in rets:
+        equity *= (1.0 + r)
+        if equity > peak:
+            peak = equity
+        dd = (peak - equity) / peak
+        if dd > max_dd:
+            max_dd = dd
+
+    total_trading_days = total * hold_days
+    if equity > 0 and total_trading_days > 0:
+        cagr = round((equity ** (252.0 / total_trading_days)) - 1.0, 4)
+    else:
+        cagr = 0.0
+
     return {
         "ticker": ticker,
         "total_signals": total,
         "win_rate": round(correct_count / total, 4),
         "correct_signals": correct_count,
-        "avg_return_pct": round(sum(s["return_pct"] for s in signals_log) / total, 4),
+        "avg_return_pct": round(avg_ret, 4),
+        "sharpe_ratio": sharpe,
+        "max_drawdown": round(max_dd, 4),
+        "cagr": cagr,
     }
