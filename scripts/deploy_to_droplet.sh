@@ -7,7 +7,12 @@ set -euo pipefail
 
 DROPLET_IP="204.48.17.22"
 REMOTE_DIR="/opt/trading-analyst"
-GITHUB_REPO="https://github.com/rahulagra31092/Personal-Trading-Agent.git"
+# If GITHUB_TOKEN is set, embed it in the URL (avoids interactive prompt on server)
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  GITHUB_REPO="https://${GITHUB_TOKEN}@github.com/rahulagra31092/Personal-Trading-Agent.git"
+else
+  GITHUB_REPO="https://github.com/rahulagra31092/Personal-Trading-Agent.git"
+fi
 GITHUB_BRANCH="plan-1-foundation"
 LOCAL_ENV="$(dirname "$0")/../.env"
 
