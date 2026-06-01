@@ -44,7 +44,7 @@ def test_momentum_from_bars_flat_near_neutral():
 
 
 def test_momentum_from_bars_insufficient_data():
-    bars = _make_bars(150, 100.0, 110.0)  # < 200 bars
+    bars = _make_bars(50, 100.0, 110.0)  # < 84 bars (3M + skip minimum)
     assert compute_momentum_score_from_bars(bars) == 0.5
 
 
@@ -91,7 +91,7 @@ def test_momentum_score_exception_returns_neutral():
 
 def test_momentum_score_insufficient_bars_returns_neutral():
     short_hist = _make_hist_df(260, price_1m=110.0, price_12m=100.0)
-    short_hist = short_hist.iloc[:150]  # trim to < 200 bars
+    short_hist = short_hist.iloc[:50]  # trim to < 84 bars (3M + skip minimum)
     with patch("quant.momentum.get_cache", return_value=None), \
          patch("quant.momentum.set_cache"), \
          patch("quant.momentum.yf.download", return_value=short_hist):
