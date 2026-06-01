@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 .env
 data/cache.db
+data/paper_portfolio.db
 paper_trading/trades_log.csv
 .superpowers/
 *.log
