@@ -33,8 +33,24 @@ EXIT      = date(2026, 5, 29)   # Friday — May 31 is Sunday
 REBAL     = [date(2025, 9, 2), date(2025, 12, 1), date(2026, 3, 2)]
 MIN_HOLD  = 90   # days
 
-N1, N2, N3 = 100, 20, 20
-CUT1, CUT2, CUT3 = 150, 40, 40   # sell if rank > cutoff at rebalance
+N1, N2, N3, N4 = 100, 20, 20, 20
+CUT1, CUT2, CUT3, CUT4 = 150, 40, 40, 40   # sell if rank > cutoff at rebalance
+
+# S4: monthly rebalancing, no minimum hold (only rule: no same-day trading)
+MIN_HOLD_S4 = 1
+S4_REBAL = [
+    date(2025, 7, 1),
+    date(2025, 8, 1),
+    date(2025, 9, 2),   # overlaps quarterly rebal
+    date(2025, 10, 1),
+    date(2025, 11, 3),
+    date(2025, 12, 1),  # overlaps quarterly rebal
+    date(2026, 1, 2),
+    date(2026, 2, 2),
+    date(2026, 3, 2),   # overlaps quarterly rebal
+    date(2026, 4, 1),
+    date(2026, 5, 1),
+]
 
 HIST_START = "2024-03-01"   # 15-month lookback for 12-1 momentum
 HIST_END   = "2026-06-01"
@@ -209,10 +225,10 @@ def score_universe(signal_date: date) -> list[dict]:
 
 
 print("=" * 70)
-print("  PHASE 3: Scoring universe at entry + 3 rebalance checkpoints")
+print("  PHASE 3: Scoring universe at all rebalance checkpoints (S1-S4)")
 print("=" * 70)
 
-all_dates = [ENTRY] + REBAL
+all_dates = sorted(set([ENTRY] + REBAL + S4_REBAL))
 scores: dict[date, list[dict]] = {}
 for d in all_dates:
     print(f"  Scoring as of {d}...", end=" ", flush=True)
@@ -298,13 +314,14 @@ class Portfolio:
         return v
 
     def rebalance(self, rebal_date: date, ranked: list[dict],
-                  cutoff: int, target_n: int, per_pos: float) -> tuple[list, list]:
+                  cutoff: int, target_n: int, per_pos: float,
+                  min_hold: int = MIN_HOLD) -> tuple[list, list]:
         rank_map = {r["ticker"]: i + 1 for i, r in enumerate(ranked)}
 
         # Sell eligible positions that dropped below rank cutoff
         to_sell = [
             t for t, pos in self.held.items()
-            if (rebal_date - pos.entry_date).days >= MIN_HOLD
+            if (rebal_date - pos.entry_date).days >= min_hold
             and rank_map.get(t, 9999) > cutoff
         ]
         sold_info = []
@@ -480,11 +497,44 @@ for rd in REBAL:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# SCENARIO 4: 20 stocks, monthly rebalancing, no minimum hold
+# ──────────────────────────────────────────────────────────────────────────────
+print(f"\n{'=' * 70}")
+print(f"  SCENARIO 4: Top 20 | $5,000 each | MONTHLY rebal | no min hold")
+print(f"  (only rule: no same-day trading)")
+print(f"{'=' * 70}")
+
+p4 = Portfolio("S4")
+PER4 = CAPITAL / N4
+
+top20_s4 = initial_capped[:N4]
+for r in top20_s4:
+    pr = get_close(r["ticker"], ENTRY)
+    if pr:
+        p4.buy(r["ticker"], pr, PER4, ENTRY)
+
+print(f"  Entered: {len(p4.held)} positions  | Cash: ${p4.cash:,.0f}")
+
+for rd in S4_REBAL:
+    ranked_r = scores[rd]
+    sold, bought = p4.rebalance(rd, ranked_r, CUT4, N4, PER4, min_hold=MIN_HOLD_S4)
+    val = p4.value(rd)
+    spy_r = (get_close("SPY", rd) - spy_ep) / spy_ep * 100
+    vix_r = vix_on(rd)
+    print(f"\n  Rebal {rd}  |  SPY {spy_r:+.1f}%  VIX {vix_r:.1f}  |  Sold {len(sold)}  Bought {len(bought)}  |  Port ${val:,.0f}")
+    for t, rank, ret in sold[:6]:
+        print(f"    SELL {t:<6} rank #{rank:>3}  {ret:>+6.1f}%")
+    for t, rank in bought[:6]:
+        print(f"    BUY  {t:<6} rank #{rank:>3}")
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Finalize all portfolios
 # ──────────────────────────────────────────────────────────────────────────────
 r1 = p1.finalize()
 r2 = p2.finalize()
 r3 = p3.finalize()
+r4 = p4.finalize()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -551,43 +601,44 @@ def ann(ret_pct):
 print(f"\n{'=' * 70}")
 print(f"  COMPARATIVE SUMMARY")
 print(f"{'=' * 70}")
-hdr = f"  {'Metric':<30} {'S1:100-Equal':>13} {'S2:20-Equal':>13} {'S3:20-Wtd':>13} {'SPY':>9}"
+hdr = f"  {'Metric':<30} {'S1:100-Eq':>11} {'S2:20-Eq':>11} {'S3:20-Wt':>11} {'S4:Monthly':>11} {'SPY':>9}"
 print(hdr)
-print(f"  {'-' * 78}")
+print(f"  {'-' * 83}")
 
-def row(label, v1, v2, v3, vs, fmt="{:>+.2f}%"):
-    def f(v): return fmt.format(v) if v is not None else "   N/A"
-    print(f"  {label:<30} {f(v1):>13} {f(v2):>13} {f(v3):>13} {f(vs):>9}")
+def row(label, v1, v2, v3, v4, vs, fmt="{:>+.2f}%"):
+    def f(v): return fmt.format(v) if v is not None else "  N/A"
+    print(f"  {label:<30} {f(v1):>11} {f(v2):>11} {f(v3):>11} {f(v4):>11} {f(vs):>9}")
 
 row("Final value ($)",
-    r1["final_value"], r2["final_value"], r3["final_value"], None,
+    r1["final_value"], r2["final_value"], r3["final_value"], r4["final_value"], None,
     fmt="${:>,.0f}")
 row("12-month return (= CAGR)",
-    r1["total_return"], r2["total_return"], r3["total_return"], spy_12m)
+    r1["total_return"], r2["total_return"], r3["total_return"], r4["total_return"], spy_12m)
 row("Alpha vs SPY",
     r1["total_return"] - spy_12m, r2["total_return"] - spy_12m,
-    r3["total_return"] - spy_12m, 0.0)
+    r3["total_return"] - spy_12m, r4["total_return"] - spy_12m, 0.0)
 row("Win rate",
-    r1["win_rate"] * 100, r2["win_rate"] * 100, r3["win_rate"] * 100, None,
-    fmt="{:>+.1f}%")
+    r1["win_rate"] * 100, r2["win_rate"] * 100, r3["win_rate"] * 100,
+    r4["win_rate"] * 100, None, fmt="{:>+.1f}%")
 row("Median position return",
-    r1["median_ret"], r2["median_ret"], r3["median_ret"], None)
+    r1["median_ret"], r2["median_ret"], r3["median_ret"], r4["median_ret"], None)
 row("Rebalancing sells (total)",
-    r1["n_sells"], r2["n_sells"], r3["n_sells"], None, fmt="{:>.0f}  ")
+    r1["n_sells"], r2["n_sells"], r3["n_sells"], r4["n_sells"], None, fmt="{:>.0f}  ")
 row("Transaction costs ($)",
     r1["total_transaction_costs"], r2["total_transaction_costs"],
-    r3["total_transaction_costs"], None, fmt="${:>,.0f}")
+    r3["total_transaction_costs"], r4["total_transaction_costs"], None, fmt="${:>,.0f}")
 
 print(f"\n  Best / Worst picks:")
-for name, res in [("S1", r1), ("S2", r2), ("S3", r3)]:
+for name, res in [("S1", r1), ("S2", r2), ("S3", r3), ("S4", r4)]:
     b = res["best"]
     w = res["worst"]
     print(f"  {name}  Best:  {b.get('ticker','?'):<6} {b.get('return_pct',0):>+7.1f}%"
           f"   Worst: {w.get('ticker','?'):<6} {w.get('return_pct',0):>+7.1f}%")
 
-# ── Detailed position lists for S2 and S3 ────────────────────────────────────
+# ── Detailed position lists for S2, S3, S4 ───────────────────────────────────
 for label, res in [("SCENARIO 2 — 20 Equal ($5,000 each)", r2),
-                    ("SCENARIO 3 — 20 Signal-Weighted", r3)]:
+                    ("SCENARIO 3 — 20 Signal-Weighted", r3),
+                    ("SCENARIO 4 — Monthly Rebal, No Min Hold", r4)]:
     print(f"\n{'=' * 70}")
     print(f"  {label}  |  FINAL POSITIONS")
     print(f"{'=' * 70}")
@@ -604,13 +655,14 @@ for label, res in [("SCENARIO 2 — 20 Equal ($5,000 each)", r2),
 print(f"\n{'=' * 70}")
 print(f"  PORTFOLIO VALUE PROGRESSION")
 print(f"{'=' * 70}")
-print(f"  {'Date':<14} {'S1':>12} {'S2':>12} {'S3':>12} {'SPY':>12}")
-for d in [ENTRY] + REBAL + [EXIT]:
-    v1 = CAPITAL if d == ENTRY else p1.value(d) if d != EXIT else r1["final_value"]
-    v2 = CAPITAL if d == ENTRY else p2.value(d) if d != EXIT else r2["final_value"]
-    v3 = CAPITAL if d == ENTRY else p3.value(d) if d != EXIT else r3["final_value"]
+print(f"  {'Date':<14} {'S1':>10} {'S2':>10} {'S3':>10} {'S4':>10} {'SPY':>10}")
+for d in sorted(set([ENTRY] + REBAL + S4_REBAL + [EXIT])):
+    v1 = CAPITAL if d == ENTRY else r1["final_value"] if d == EXIT else p1.value(d)
+    v2 = CAPITAL if d == ENTRY else r2["final_value"] if d == EXIT else p2.value(d)
+    v3 = CAPITAL if d == ENTRY else r3["final_value"] if d == EXIT else p3.value(d)
+    v4 = CAPITAL if d == ENTRY else r4["final_value"] if d == EXIT else p4.value(d)
     spy_v = CAPITAL * (get_close("SPY", d) / spy_ep) if spy_ep else CAPITAL
-    print(f"  {str(d):<14} ${v1:>10,.0f}  ${v2:>10,.0f}  ${v3:>10,.0f}  ${spy_v:>10,.0f}")
+    print(f"  {str(d):<14} ${v1:>8,.0f}  ${v2:>8,.0f}  ${v3:>8,.0f}  ${v4:>8,.0f}  ${spy_v:>8,.0f}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -620,7 +672,8 @@ TARGET = 25.0
 print(f"\n{'=' * 70}")
 print(f"  VERDICT  (target CAGR: {TARGET}% | fired if < SPY {spy_12m:+.2f}%)")
 print(f"{'=' * 70}")
-for name, res in [("S1 (100 equal)", r1), ("S2 (20 equal)", r2), ("S3 (20 weighted)", r3)]:
+for name, res in [("S1 (100 equal)", r1), ("S2 (20 equal)", r2),
+                  ("S3 (20 weighted)", r3), ("S4 (monthly rebal)", r4)]:
     cagr = res["total_return"]  # already 12 months = CAGR
     if cagr >= TARGET:
         verdict = "BONUS EARNED  -- beat 25% CAGR target"

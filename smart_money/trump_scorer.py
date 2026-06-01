@@ -223,6 +223,7 @@ def _fetch_trump_policy_news(days: int = 7) -> list[str]:
         return texts
     except Exception as exc:
         logger.warning("Trump policy news fetch failed: %s", exc)
+        set_cache(cache_key, [], ttl_seconds=3600)  # cache failures to avoid re-hitting rate limit
         return []
 
 
@@ -260,6 +261,7 @@ def compute_trump_modifier(ticker: str, days: int = 7) -> float:
 
     texts = _fetch_trump_policy_news(days)
     if not texts:
+        set_cache(cache_key, 0.0, ttl_seconds=_TTL)
         return 0.0
 
     tag_strength = score_active_tags(texts)

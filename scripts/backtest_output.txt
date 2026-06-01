@@ -1,0 +1,502 @@
+prefetch_sector_news failed for sector tech: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AAPL+OR+MSFT+OR+NVDA+OR+GOOGL+OR+META+OR+AMZN+OR+TSLA+OR+AVGO+OR+ORCL+OR+CRM+OR+ADBE+OR+AMD+OR+QCOM+OR+TXN+OR+INTC+OR+MU+OR+AMAT+OR+LRCX+OR+KLAC+OR+MRVL+OR+NOW+OR+PLTR+OR+PANW+OR+FTNT+OR+CRWD+OR+ZS+OR+NET+OR+DDOG+OR+MDB+OR+ARM+OR+CSCO+OR+IBM+OR+DELL+OR+ANET+OR+HPE+OR+SMCI+OR+CDNS+OR+SNPS+OR+ANSS+OR+EPAM&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector financials: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=JPM+OR+BAC+OR+WFC+OR+GS+OR+MS+OR+BLK+OR+C+OR+AXP+OR+COF+OR+USB+OR+TFC+OR+PNC+OR+SCHW+OR+CME+OR+ICE+OR+MCO+OR+SPGI+OR+V+OR+MA+OR+PYPL+OR+KKR+OR+APO+OR+BX+OR+CG+OR+ARES&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector healthcare: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LLY+OR+UNH+OR+JNJ+OR+ABBV+OR+MRK+OR+PFE+OR+BMY+OR+AMGN+OR+GILD+OR+ISRG+OR+MDT+OR+ABT+OR+TMO+OR+DHR+OR+SYK+OR+BSX+OR+ELV+OR+CVS+OR+CI+OR+HUM+OR+VRTX+OR+REGN+OR+BIIB+OR+MRNA+OR+ZBH&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector consumer_discretionary: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=HD+OR+LOW+OR+TGT+OR+WMT+OR+COST+OR+MCD+OR+SBUX+OR+NKE+OR+TJX+OR+BKNG+OR+MAR+OR+HLT+OR+LVS+OR+WYNN+OR+MGM+OR+F+OR+GM+OR+RIVN+OR+LCID+OR+POOL&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector consumer_staples: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PG+OR+KO+OR+PEP+OR+PM+OR+MO+OR+CL+OR+MDLZ+OR+GIS+OR+K+OR+STZ&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector energy: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=XOM+OR+CVX+OR+COP+OR+EOG+OR+SLB+OR+MPC+OR+VLO+OR+PSX+OR+DVN+OR+HAL&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector industrials: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=GE+OR+HON+OR+UPS+OR+FDX+OR+CAT+OR+DE+OR+LMT+OR+RTX+OR+NOC+OR+GD+OR+BA+OR+MMM+OR+EMR+OR+ETN+OR+PH+OR+ROK+OR+ITW+OR+IR+OR+AME+OR+CARR+OR+UBER+OR+LYFT+OR+DASH+OR+ABNB&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector materials: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=FCX+OR+NEM+OR+APD+OR+LIN+OR+SHW+OR+ECL+OR+DD+OR+DOW+OR+ALB+OR+MP&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector real_estate: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AMT+OR+PLD+OR+EQIX+OR+SPG+OR+CBRE+OR+WELL+OR+O+OR+DLR+OR+PSA+OR+AVB&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector utilities: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NEE+OR+DUK+OR+SO+OR+AEP+OR+EXC+OR+SRE+OR+PCG+OR+XEL+OR+WEC+OR+ES&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+prefetch_sector_news failed for sector comm_services: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=T+OR+VZ+OR+TMUS+OR+CHTR+OR+CMCSA+OR+DIS+OR+NFLX+OR+SPOT+OR+SNAP+OR+PINS&language=en&pageSize=100&sortBy=publishedAt&apiKey=922251c71f734e86a87bf2e616041fea&from=2026-05-27
+News fetch failed for AAPL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AAPL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MSFT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MSFT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for NVDA: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NVDA&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for GOOGL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=GOOGL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for META: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=META&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AMZN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AMZN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for TSLA: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=TSLA&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AVGO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AVGO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ORCL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ORCL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CRM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CRM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ADBE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ADBE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AMD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AMD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for QCOM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=QCOM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for TXN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=TXN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for INTC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=INTC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MU: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MU&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AMAT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AMAT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for LRCX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LRCX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for KLAC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=KLAC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MRVL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MRVL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for NOW: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NOW&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PLTR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PLTR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PANW: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PANW&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for FTNT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=FTNT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CRWD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CRWD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ZS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ZS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for NET: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NET&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DDOG: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DDOG&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MDB: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MDB&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ARM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ARM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CSCO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CSCO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for IBM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=IBM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DELL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DELL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ANET: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ANET&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for HPE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=HPE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SMCI: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SMCI&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CDNS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CDNS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SNPS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SNPS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: ANSS"}}}
+$ANSS: possibly delisted; no timezone found
+
+1 Failed download:
+['ANSS']: possibly delisted; no timezone found
+News fetch failed for EPAM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=EPAM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for JPM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=JPM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for BAC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=BAC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for WFC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=WFC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for GS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=GS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for BLK: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=BLK&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for C: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=C&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AXP: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AXP&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for COF: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=COF&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for USB: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=USB&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for TFC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=TFC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PNC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PNC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SCHW: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SCHW&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CME: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CME&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ICE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ICE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MCO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MCO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SPGI: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SPGI&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for V: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=V&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MA: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MA&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PYPL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PYPL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for KKR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=KKR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for APO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=APO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for BX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=BX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CG: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CG&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ARES: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ARES&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for LLY: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LLY&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for UNH: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=UNH&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for JNJ: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=JNJ&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ABBV: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ABBV&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MRK: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MRK&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PFE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PFE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for BMY: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=BMY&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AMGN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AMGN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for GILD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=GILD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ISRG: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ISRG&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MDT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MDT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ABT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ABT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for TMO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=TMO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DHR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DHR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SYK: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SYK&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for BSX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=BSX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ELV: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ELV&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CVS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CVS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CI: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CI&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for HUM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=HUM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for VRTX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=VRTX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for REGN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=REGN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for BIIB: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=BIIB&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MRNA: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MRNA&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ZBH: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ZBH&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for HD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=HD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for LOW: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LOW&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for TGT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=TGT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for WMT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=WMT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for COST: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=COST&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MCD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MCD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SBUX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SBUX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for NKE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NKE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for TJX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=TJX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for BKNG: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=BKNG&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MAR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MAR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for HLT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=HLT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for LVS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LVS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for WYNN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=WYNN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MGM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MGM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for F: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=F&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for GM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=GM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for RIVN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=RIVN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for LCID: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LCID&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for POOL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=POOL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PG: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PG&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for KO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=KO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PEP: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PEP&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MDLZ: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MDLZ&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for GIS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=GIS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: K"}}}
+$K: possibly delisted; no timezone found
+
+1 Failed download:
+['K']: possibly delisted; no timezone found
+News fetch failed for STZ: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=STZ&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for XOM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=XOM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CVX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CVX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for COP: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=COP&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for EOG: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=EOG&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SLB: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SLB&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MPC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MPC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for VLO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=VLO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PSX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PSX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DVN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DVN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for HAL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=HAL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for GE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=GE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for HON: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=HON&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for UPS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=UPS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for FDX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=FDX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CAT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CAT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for LMT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LMT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for RTX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=RTX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+Checking market regime (VIX) as of Jan 2, 2026...
+  LOW_VOL  VIX=14.51  pos_factor=1.0
+
+Prefetching sector news...
+Done.
+
+Scoring 194 tickers | 6-layer model | signal date 2026-01-01
+   #  Tick    Sig       Sc    Mo    Qu     C     N     E
+-------------------------------------------------------
+   1  AAPL    BUY    0.624  0.60  0.72  0.48  0.50  0.75
+   2  MSFT    BUY    0.628  0.62  0.80  0.60  0.50  0.75
+   3  NVDA    BUY    0.677  0.72  0.83  0.52  0.50  0.75
+   4  GOOGL   BUY    0.676  0.88  0.77  0.53  0.50  0.75
+   5  META    BUY    0.609  0.57  0.85  0.65  0.50  0.62
+   6  AMZN    BUY    0.591  0.54  0.66  0.52  0.50  0.62
+   7  TSLA    WATCH  0.498  0.52  0.39  0.50  0.50  0.50
+   8  AVGO    BUY    0.689  0.87  0.84  0.56  0.50  0.75
+   9  ORCL    BUY    0.640  0.66  0.80  0.50  0.50  0.62
+  10  CRM     WATCH  0.533  0.29  0.72  0.52  0.50  0.75
+  11  ADBE    WATCH  0.534  0.30  0.85  0.60  0.50  0.75
+  12  AMD     BUY    0.645  0.91  0.55  0.62  0.50  0.62
+  13  QCOM    BUY    0.629  0.59  0.75  0.47  0.50  0.75
+  14  TXN     WATCH  0.543  0.47  0.75  0.46  0.50  0.50
+  15  INTC    BUY    0.641  0.97  0.40  0.45  0.50  0.62
+  16  MU      BUY    0.728  1.00  0.76  0.49  0.50  0.75
+  17  AMAT    BUY    0.713  0.87  0.72  0.64  0.50  0.75
+  18  LRCX    BUY    0.733  0.97  0.73  0.55  0.50  0.75
+  19  KLAC    BUY    0.702  0.94  0.77  0.55  0.50  0.75
+  20  MRVL    WATCH  0.556  0.38  0.60  0.67  0.50  0.62
+  21  NOW     WATCH  0.538  0.34  0.71  0.55  0.50  0.75
+  22  PLTR    BUY    0.723  0.97  0.84  0.52  0.50  0.75
+  23  PANW    BUY    0.640  0.52  0.70  0.64  0.50  0.75
+  24  FTNT    WATCH  0.557  0.41  0.85  0.62  0.50  0.75
+  25  CRWD    BUY    0.642  0.81  0.55  0.59  0.50  0.75
+  26  ZS      BUY    0.650  0.72  0.56  0.50  0.50  0.75
+  27  NET     BUY    0.683  0.93  0.53  0.45  0.50  0.75
+  28  DDOG    BUY    0.583  0.56  0.63  0.53  0.50  0.75
+  29  MDB     BUY    0.647  0.90  0.56  0.50  0.50  0.75
+  30  ARM     WATCH  0.545  0.56  0.69  0.35  0.50  0.62
+  31  CSCO    BUY    0.684  0.73  0.73  0.66  0.50  0.75
+  32  IBM     BUY    0.687  0.77  0.76  0.52  0.50  0.75
+  33  DELL    WATCH  0.547  0.65  0.36  0.43  0.50  0.75
+  34  ANET    BUY    0.613  0.60  0.77  0.59  0.50  0.75
+  35  HPE     WATCH  0.509  0.53  0.40  0.35  0.50  0.75
+  36  SMCI    WATCH  0.572  0.55  0.44  0.50  0.50  0.50
+  37  CDNS    BUY    0.605  0.54  0.75  0.59  0.50  0.75
+  38  SNPS    WATCH  0.519  0.44  0.63  0.62  0.50  0.62
+  40  EPAM    WATCH  0.506  0.37  0.47  0.48  0.50  0.75
+  41  JPM     BUY    0.590  0.72  0.40  0.62  0.50  0.62
+  42  BAC     WATCH  0.551  0.67  0.35  0.47  0.50  0.75
+  43  WFC     WATCH  0.557  0.68  0.37  0.62  0.50  0.62
+  44  GS      BUY    0.641  0.79  0.71  0.48  0.50  0.75
+  45  MS      BUY    0.643  0.76  0.72  0.54  0.50  0.75
+  46  BLK     WATCH  0.557  0.52  0.55  0.50  0.50  0.75
+  47  C       BUY    0.611  0.82  0.33  0.66  0.50  0.62
+  48  AXP     BUY    0.616  0.66  0.78  0.53  0.50  0.62
+  49  COF     WATCH  0.524  0.70  0.30  0.56  0.50  0.50
+  50  USB     WATCH  0.526  0.56  0.37  0.48  0.50  0.75
+  51  TFC     WATCH  0.534  0.59  0.34  0.47  0.50  0.75
+  52  PNC     WATCH  0.530  0.53  0.37  0.55  0.50  0.75
+  53  SCHW    BUY    0.619  0.69  0.74  0.53  0.50  0.62
+  54  CME     BUY    0.646  0.66  0.72  0.62  0.50  0.62
+  55  ICE     BUY    0.611  0.54  0.70  0.63  0.50  0.75
+  56  MCO     BUY    0.616  0.53  0.83  0.57  0.50  0.75
+  57  SPGI    WATCH  0.546  0.50  0.67  0.59  0.50  0.62
+  58  V       BUY    0.619  0.54  0.85  0.54  0.50  0.75
+  59  MA      BUY    0.626  0.53  0.85  0.58  0.50  0.75
+  60  PYPL    WATCH  0.515  0.31  0.63  0.56  0.50  0.62
+  61  KKR     WATCH  0.515  0.38  0.56  0.55  0.50  0.62
+  62  APO     WATCH  0.520  0.36  0.48  0.50  0.50  0.75
+  63  BX      BUY    0.588  0.41  0.82  0.55  0.50  0.75
+  64  CG      WATCH  0.542  0.57  0.67  0.50  0.50  0.50
+  65  ARES    WATCH  0.519  0.43  0.53  0.60  0.50  0.38
+  66  LLY     BUY    0.628  0.75  0.85  0.54  0.50  0.75
+  67  UNH     WATCH  0.461  0.26  0.44  0.57  0.50  0.62
+  68  JNJ     BUY    0.632  0.81  0.75  0.50  0.50  0.62
+  69  ABBV    BUY    0.645  0.72  0.79  0.46  0.50  0.62
+  70  MRK     BUY    0.605  0.54  0.73  0.59  0.50  0.75
+  71  PFE     WATCH  0.561  0.52  0.64  0.41  0.50  0.75
+  72  BMY     WATCH  0.559  0.43  0.82  0.62  0.50  0.75
+  73  AMGN    BUY    0.619  0.74  0.82  0.46  0.50  0.75
+  74  GILD    BUY    0.709  0.76  0.85  0.62  0.50  0.75
+  75  ISRG    BUY    0.587  0.56  0.67  0.57  0.50  0.75
+  76  MDT     BUY    0.627  0.72  0.61  0.41  0.50  0.75
+  77  ABT     WATCH  0.570  0.60  0.60  0.46  0.50  0.75
+  78  TMO     BUY    0.596  0.59  0.54  0.48  0.50  0.75
+  79  DHR     WATCH  0.545  0.49  0.57  0.53  0.50  0.75
+  80  SYK     WATCH  0.573  0.52  0.65  0.64  0.50  0.62
+  81  BSX     BUY    0.586  0.58  0.67  0.54  0.50  0.75
+  82  ELV     WATCH  0.489  0.43  0.47  0.62  0.50  0.62
+  83  CVS     BUY    0.663  0.93  0.36  0.55  0.50  0.75
+  84  CI      WATCH  0.508  0.51  0.43  0.53  0.50  0.75
+  85  HUM     WATCH  0.477  0.47  0.38  0.50  0.50  0.75
+  86  VRTX    WATCH  0.539  0.56  0.68  0.35  0.50  0.62
+  87  REGN    WATCH  0.553  0.55  0.56  0.65  0.50  0.75
+  88  BIIB    BUY    0.604  0.65  0.65  0.55  0.50  0.75
+  89  MRNA    WATCH  0.446  0.24  0.20  0.75  0.50  0.75
+  90  ZBH     WATCH  0.554  0.43  0.61  0.57  0.50  0.75
+  91  HD      WATCH  0.494  0.44  0.66  0.57  0.50  0.50
+  92  LOW     WATCH  0.559  0.50  0.47  0.57  0.50  0.75
+  93  TGT     WATCH  0.444  0.29  0.55  0.35  0.50  0.75
+  94  WMT     BUY    0.596  0.68  0.56  0.57  0.50  0.62
+  95  COST    WATCH  0.578  0.50  0.55  0.67  0.50  0.75
+  96  MCD     WATCH  0.576  0.55  0.67  0.53  0.50  0.62
+  97  SBUX    WATCH  0.440  0.47  0.38  0.48  0.50  0.38
+  98  NKE     WATCH  0.501  0.42  0.56  0.46  0.50  0.75
+  99  TJX     BUY    0.627  0.68  0.65  0.60  0.50  0.75
+ 100  BKNG    BUY    0.601  0.53  0.85  0.55  0.50  0.75
+ 101  MAR     WATCH  0.563  0.57  0.84  0.50  0.50  0.62
+ 102  HLT     BUY    0.607  0.60  0.84  0.62  0.50  0.75
+ 103  LVS     BUY    0.704  0.76  0.85  0.70  0.50  0.75
+ 104  WYNN    BUY    0.645  0.85  0.75  0.50  0.50  0.38
+ 105  MGM     WATCH  0.547  0.52  0.56  0.70  0.50  0.50
+ 106  F       WATCH  0.541  0.77  0.23  0.40  0.50  0.62
+ 107  GM      WATCH  0.574  0.76  0.35  0.48  0.50  0.75
+ 108  RIVN    WATCH  0.500  0.69  0.20  0.50  0.50  0.50
+ 109  LCID    AVOID  0.399  0.15  0.20  0.50  0.50  0.25
+ 110  POOL    WATCH  0.549  0.31  0.65  0.55  0.50  0.62
+ 111  PG      WATCH  0.556  0.42  0.72  0.53  0.50  0.75
+ 112  KO      BUY    0.628  0.63  0.78  0.57  0.50  0.75
+ 113  PEP     BUY    0.602  0.51  0.75  0.46  0.50  0.75
+ 114  PM      BUY    0.623  0.72  0.75  0.51  0.50  0.62
+ 115  MO      BUY    0.633  0.64  0.85  0.70  0.50  0.62
+ 116  CL      BUY    0.591  0.42  0.77  0.75  0.50  0.75
+ 117  MDLZ    WATCH  0.538  0.48  0.47  0.55  0.50  0.75
+ 118  GIS     WATCH  0.455  0.33  0.59  0.52  0.50  0.62
+ 120  STZ     WATCH  0.482  0.26  0.65  0.45  0.50  0.62
+ 121  XOM     BUY    0.603  0.60  0.47  0.62  0.50  0.75
+ 122  CVX     WATCH  0.530  0.57  0.50  0.43  0.50  0.75
+ 123  COP     WATCH  0.493  0.46  0.54  0.48  0.50  0.62
+ 124  EOG     WATCH  0.546  0.45  0.66  0.48  0.50  0.75
+ 125  SLB     WATCH  0.528  0.49  0.45  0.50  0.50  0.75
+ 126  MPC     WATCH  0.580  0.80  0.52  0.35  0.50  0.62
+ 127  VLO     BUY    0.595  0.83  0.45  0.35  0.50  0.75
+ 128  PSX     WATCH  0.580  0.69  0.43  0.50  0.50  0.75
+ 129  DVN     WATCH  0.558  0.64  0.58  0.70  0.50  0.38
+ 130  HAL     WATCH  0.490  0.52  0.45  0.35  0.50  0.62
+ 131  GE      BUY    0.694  0.90  0.65  0.64  0.50  0.75
+ 132  HON     WATCH  0.574  0.44  0.61  0.59  0.50  0.75
+ 133  UPS     WATCH  0.491  0.36  0.62  0.55  0.50  0.62
+ 134  FDX     WATCH  0.541  0.49  0.51  0.58  0.50  0.75
+ 135  CAT     BUY    0.675  0.87  0.64  0.59  0.50  0.62
+ 136  DE      WATCH  0.545  0.59  0.52  0.59  0.50  0.75
+ 137  LMT     WATCH  0.509  0.46  0.57  0.35  0.50  0.50
+ 138  RTX     BUY    0.642  0.81  0.44  0.65  0.50  0.75
+News fetch failed for NOC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NOC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for GD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=GD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for BA: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=BA&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MMM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MMM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for EMR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=EMR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ETN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ETN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PH: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PH&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ROK: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ROK&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ITW: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ITW&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for IR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=IR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AME: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AME&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CARR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CARR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for UBER: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=UBER&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for LYFT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LYFT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DASH: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DASH&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ABNB: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ABNB&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for FCX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=FCX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for NEM: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NEM&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for APD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=APD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for LIN: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=LIN&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SHW: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SHW&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ECL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ECL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DOW: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DOW&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ALB: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ALB&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for MP: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=MP&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AMT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AMT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PLD: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PLD&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for EQIX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=EQIX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SPG: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SPG&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CBRE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CBRE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for WELL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=WELL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for O: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=O&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DLR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DLR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PSA: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PSA&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AVB: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AVB&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for NEE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NEE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DUK: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DUK&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SO: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SO&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for AEP: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=AEP&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for EXC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=EXC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SRE: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SRE&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PCG: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PCG&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for XEL: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=XEL&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for WEC: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=WEC&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for ES: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=ES&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for T: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=T&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for VZ: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=VZ&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for TMUS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=TMUS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CHTR: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CHTR&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for CMCSA: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=CMCSA&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for DIS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=DIS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for NFLX: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=NFLX&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SPOT: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SPOT&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for SNAP: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=SNAP&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+News fetch failed for PINS: 429 Client Error: Too Many Requests for url: https://newsapi.org/v2/everything?q=PINS&from=2026-05-27&sortBy=relevancy&language=en&pageSize=10&apiKey=922251c71f734e86a87bf2e616041fea
+ 139  NOC     WATCH  0.558  0.64  0.57  0.35  0.50  0.75
+ 140  GD      BUY    0.613  0.71  0.47  0.62  0.50  0.75
+ 141  BA      BUY    0.582  0.62  0.54  0.62  0.50  0.62
+ 142  MMM     BUY    0.619  0.74  0.69  0.42  0.50  0.75
+ 143  EMR     BUY    0.591  0.56  0.58  0.59  0.50  0.75
+ 144  ETN     BUY    0.604  0.51  0.58  0.55  0.50  0.75
+ 145  PH      BUY    0.625  0.75  0.61  0.55  0.50  0.75
+ 146  ROK     BUY    0.682  0.76  0.68  0.60  0.50  0.75
+ 147  ITW     WATCH  0.573  0.50  0.70  0.59  0.50  0.75
+ 148  IR      WATCH  0.501  0.41  0.49  0.62  0.50  0.62
+ 149  AME     BUY    0.602  0.57  0.53  0.55  0.50  0.75
+ 150  CARR    WATCH  0.500  0.35  0.45  0.60  0.50  0.62
+ 151  UBER    BUY    0.607  0.79  0.69  0.51  0.50  0.50
+ 152  LYFT    BUY    0.610  0.89  0.67  0.50  0.50  0.62
+ 153  DASH    BUY    0.585  0.70  0.56  0.66  0.50  0.50
+ 154  ABNB    WATCH  0.509  0.42  0.84  0.52  0.50  0.38
+ 155  FCX     BUY    0.580  0.61  0.55  0.48  0.50  0.75
+ 156  NEM     BUY    0.670  0.99  0.74  0.35  0.50  0.75
+ 157  APD     WATCH  0.510  0.43  0.50  0.57  0.50  0.75
+ 158  LIN     WATCH  0.549  0.49  0.61  0.68  0.50  0.75
+ 159  SHW     WATCH  0.576  0.50  0.72  0.60  0.50  0.62
+ 160  ECL     WATCH  0.555  0.62  0.62  0.55  0.50  0.50
+ 161  DD      BUY    0.603  0.69  0.42  0.62  0.50  0.75
+ 162  DOW     WATCH  0.455  0.26  0.23  0.75  0.50  0.62
+ 163  ALB     BUY    0.607  0.82  0.34  0.75  0.50  0.62
+ 164  MP      BUY    0.674  1.00  0.40  0.50  0.50  0.75
+ 165  AMT     WATCH  0.571  0.49  0.80  0.55  0.50  0.62
+ 166  PLD     BUY    0.592  0.69  0.63  0.52  0.50  0.62
+ 167  EQIX    WATCH  0.466  0.35  0.56  0.67  0.50  0.50
+ 168  SPG     BUY    0.608  0.58  0.85  0.75  0.50  0.25
+ 169  CBRE    WATCH  0.566  0.66  0.47  0.45  0.50  0.75
+ 170  WELL    BUY    0.654  0.88  0.46  0.75  0.50  0.62
+ 171  O       WATCH  0.478  0.61  0.62  0.51  0.50  0.25
+ 172  DLR     WATCH  0.527  0.43  0.54  0.62  0.50  0.62
+ 173  PSA     WATCH  0.528  0.46  0.73  0.46  0.50  0.75
+ 174  AVB     AVOID  0.398  0.39  0.60  0.35  0.50  0.25
+ 175  NEE     WATCH  0.575  0.66  0.60  0.62  0.50  0.75
+ 176  DUK     WATCH  0.546  0.61  0.55  0.35  0.50  0.75
+ 177  SO      WATCH  0.558  0.59  0.55  0.75  0.50  0.62
+ 178  AEP     BUY    0.606  0.74  0.56  0.62  0.50  0.62
+ 179  EXC     WATCH  0.565  0.67  0.52  0.35  0.50  0.75
+ 180  SRE     WATCH  0.531  0.55  0.49  0.50  0.50  0.62
+ 181  PCG     WATCH  0.443  0.33  0.50  0.50  0.50  0.50
+ 182  XEL     WATCH  0.562  0.65  0.53  0.48  0.50  0.62
+ 183  WEC     WATCH  0.531  0.64  0.53  0.35  0.50  0.62
+ 184  ES      BUY    0.596  0.65  0.57  0.62  0.50  0.75
+ 185  T       BUY    0.584  0.63  0.65  0.48  0.50  0.75
+ 186  VZ      WATCH  0.578  0.57  0.64  0.53  0.50  0.75
+ 187  TMUS    WATCH  0.520  0.48  0.67  0.55  0.50  0.62
+ 188  CHTR    WATCH  0.449  0.22  0.71  0.58  0.50  0.38
+ 189  CMCSA   WATCH  0.510  0.32  0.72  0.46  0.50  0.75
+ 190  DIS     WATCH  0.547  0.46  0.51  0.55  0.50  0.75
+ 191  NFLX    BUY    0.593  0.66  0.72  0.60  0.50  0.50
+ 192  SPOT    BUY    0.639  0.70  0.66  0.60  0.50  0.62
+ 193  SNAP    WATCH  0.442  0.29  0.43  0.50  0.50  0.62
+ 194  PINS    WATCH  0.552  0.44  0.67  0.62  0.50  0.38
+
+====================================================================
+  FORWARD TEST: Jan 2, 2026 -> May 29, 2026  (148 days)
+  Strategy: TOP 20 by score  |  $5,000 flat each  |  No stops  |  Hold
+  Regime: LOW_VOL  VIX 14.51
+====================================================================
+
+   #  Ticker   Score    Mom   Qual     Entry      Exit    Return       P&L
+  ------------------------------------------------------------------------
+   1  LRCX     0.733   0.97   0.73  $ 184.84  $ 318.18   +72.14%+ $ +3,607
+   2  MU       0.728   1.00   0.76  $ 315.29  $ 971.00  +207.97%+ $+10,398
+   3  PLTR     0.723   0.97   0.84  $ 167.86  $ 156.54    -6.74%  $   -337
+   4  AMAT     0.713   0.87   0.72  $ 268.20  $ 450.06   +67.81%+ $ +3,390
+   5  GILD     0.709   0.76   0.85  $ 120.91  $ 134.43   +11.18%+ $   +559
+   6  LVS      0.704   0.76   0.85  $  64.50  $  50.57   -21.59%  $ -1,080
+   7  GE       0.694   0.90   0.65  $ 320.28  $ 323.76    +1.09%  $    +54
+   8  AVGO     0.689   0.87   0.84  $ 346.89  $ 446.77   +28.79%+ $ +1,440
+   9  IBM      0.687   0.77   0.76  $ 287.73  $ 297.80    +3.50%  $   +175
+  10  CSCO     0.684   0.73   0.72  $  75.63  $ 120.42   +59.22%+ $ +2,961
+  11  NET      0.683   0.93   0.53  $ 196.02  $ 241.82   +23.36%+ $ +1,168
+  12  ROK      0.682   0.76   0.68  $ 395.95  $ 451.06   +13.92%+ $   +696
+  13  GOOGL    0.676   0.88   0.77  $ 314.93  $ 380.34   +20.77%+ $ +1,038
+  14  CAT      0.675   0.87   0.64  $ 595.88  $ 875.87   +46.99%+ $ +2,350
+  15  MP       0.674   1.00   0.40  $  54.97  $  64.70   +17.70%+ $   +885
+  16  NEM      0.670   0.99   0.74  $ 100.78  $ 109.81    +8.96%  $   +448
+  17  CVS      0.663   0.93   0.36  $  78.78  $  90.98   +15.48%+ $   +774
+  18  WELL     0.654   0.88   0.47  $ 185.65  $ 205.33   +10.60%  $   +530
+  19  ZS       0.650   0.72   0.56  $ 220.57  $ 139.73   -36.65%  $ -1,832
+  20  MDB      0.647   0.90   0.56  $ 399.65  $ 335.55   -16.04%  $   -802
+
+  Note:   = beat SPY (+11.03%) on this position
+
+====================================================================
+  PERFORMANCE SUMMARY
+====================================================================
+  Capital deployed   : $   100,000  (20 x $5,000)
+  Total P&L          : $+26,423.00
+  Portfolio return   :     +26.42%  (5-month)
+  Annualized return  :      +78.3%  (projected full-year)
+  S&P 500 return     :     +11.03%  (SPY $681.31 -> $756.48)
+  S&P 500 annualized :      +29.4%
+  Alpha vs S&P 500   :     +15.39%  (+48.8% annualized)
+
+  Win rate           : 80.0%  (16/20 positions positive)
+  Median return      : +14.70%
+  Std deviation      : 51.20%
+  Best pick          : MU      +207.97%  ($+10,398)
+  Worst pick         : ZS      -36.65%  ($-1,832)
+
+====================================================================
+  REBALANCING SIGNAL (Q1 end Mar 31)
+====================================================================
+  These positions were down >15% at Q1-end — would trigger a re-score:
+    LVS     Q1 return: -16.95%
+    IBM     Q1 return: -16.37%
+    ZS      Q1 return: -36.40%
+    MDB     Q1 return: -38.75%
+  Action: re-score universe Mar 31, replace with next highest-ranked stocks
+
+====================================================================
+  FULL UNIVERSE RANKING QUALITY CHECK
+====================================================================
+  Q1 (top 20): score=0.667  avg return=+29.60%  win=79%
+  Q2         : score=0.611  avg return= +3.25%  win=61%
+  Q3         : score=0.576  avg return= +5.96%  win=63%
+  Q4         : score=0.543  avg return=+20.27%  win=55%
+  Q5 (bottom): score=0.490  avg return= +2.76%  win=50%
+
+  Spearman rank corr : +0.153
+  (>0 = model ranks winners higher | closer to 1.0 = stronger signal)
+
+====================================================================
+  TOP 10 MISSED PICKS (in universe but outside top 20)
+====================================================================
+  Ticker   Score   Rank    Return  Why missed
+  DELL     0.547  # 128  +231.81%  ranked #128
+  ARM      0.545  # 134  +207.93%  ranked #134
+  INTC     0.641  #  31  +191.21%  ranked #31
+  AMD      0.645  #  24  +130.95%  concentration cap
+  MRVL     0.556  # 119  +129.61%  ranked #119
+  DDOG     0.583  #  88   +84.91%  ranked #88
+  HPE      0.509  # 164   +79.22%  ranked #164
+  FTNT     0.557  # 117   +77.16%  concentration cap
+  TXN      0.543  # 136   +74.20%  ranked #136
+  CRWD     0.642  #  29   +61.16%  concentration cap
+
+====================================================================
+

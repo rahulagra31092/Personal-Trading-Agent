@@ -14,13 +14,15 @@ def _require(name: str) -> str:
     return val
 
 
-POLYGON_API_KEY = _require("POLYGON_API_KEY")
+POLYGON_API_KEY: str | None = os.environ.get("POLYGON_API_KEY") or None
 CLAUDE_API_KEY = _require("CLAUDE_API_KEY")
-NEWS_API_KEY = _require("NEWS_API_KEY")
-SLACK_WEBHOOK_URL = _require("SLACK_WEBHOOK_URL")
+NEWS_API_KEY: str | None = os.environ.get("NEWS_API_KEY") or None
+NEWSDATA_API_KEY: str | None = os.environ.get("NEWSDATA_API_KEY") or None
+SLACK_WEBHOOK_URL: str | None = os.environ.get("SLACK_WEBHOOK_URL") or None
 SCHWAB_CLIENT_ID: str | None = os.environ.get("SCHWAB_CLIENT_ID") or None
 SCHWAB_CLIENT_SECRET: str | None = os.environ.get("SCHWAB_CLIENT_SECRET") or None
 QUIVER_API_KEY: str | None = os.environ.get("QUIVER_API_KEY") or None
+GOOGLE_SHEET_ID: str | None = os.environ.get("GOOGLE_SHEET_ID") or None
 
 EXCLUDED_TICKERS: frozenset[str] = frozenset({"FUBO"})
 

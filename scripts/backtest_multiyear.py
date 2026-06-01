@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
 Multi-year, multi-regime backtest: 2019–2026
-Full S&P 500 universe (~480 tickers) | 4 strategies
+Russell 1000 proxy universe: S&P 500 (~480) + S&P 400 MidCap (~400) ≈ 900 tickers | 4 strategies
   S2: quarterly  | equal weight    | 90-day min hold
   S4: monthly    | equal weight    | 1-day  min hold
   S5: monthly    | signal-weighted | 1-day  min hold
   S6: monthly    | equal weight    | 1-day  min hold | VIX-adaptive signal weights
 
-Run-time estimate: 60–90 min (quality + congress API calls for ~480 tickers)
+Run-time estimate: 2–3 hours (quality + congress API calls for ~900 tickers)
+Survivorship bias note: uses current index constituents — understates historical returns slightly.
 """
 import sys, os, warnings, statistics
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.stdout.reconfigure(encoding="utf-8")
 warnings.filterwarnings("ignore")
 import logging
 logging.basicConfig(level=logging.WARNING)
@@ -56,7 +58,31 @@ STRATEGIES = {
 HIST_START = "2017-06-01"   # 18-month buffer before 2019 entry for momentum lookbacks
 HIST_END   = "2026-06-01"
 
-# ── Full S&P 500 universe (~480 tickers) ───────────────────────────────────────
+
+def _fetch_sp400_tickers() -> list[str]:
+    """Fetch S&P 400 MidCap constituents from Wikipedia. Falls back to [] on failure."""
+    try:
+        import requests, io
+        url = "https://en.wikipedia.org/wiki/List_of_S%26P_400_companies"
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; trading-backtest/1.0)"}
+        r = requests.get(url, headers=headers, timeout=20)
+        r.raise_for_status()
+        tables = pd.read_html(io.StringIO(r.text))
+        df = tables[0]
+        tickers = df["Symbol"].dropna().astype(str).tolist()
+        # Normalise BRK.B → BRK-B style for yfinance
+        tickers = [t.replace(".", "-") for t in tickers]
+        print(f"  S&P 400 fetched: {len(tickers)} tickers from Wikipedia")
+        return tickers
+    except Exception as e:
+        print(f"  WARNING: S&P 400 fetch failed ({e}), using S&P 500 only")
+        return []
+
+
+# ── Russell 1000 proxy: S&P 500 + S&P 400 MidCap ─────────────────────────────
+# S&P 500 tickers hardcoded for reliability; S&P 400 fetched dynamically.
+_SP400_TICKERS = _fetch_sp400_tickers()
+
 UNIVERSE = list(dict.fromkeys([
     # Technology
     "AAPL","MSFT","NVDA","GOOGL","META","AMZN","TSLA","AVGO","ORCL","CRM",
@@ -121,11 +147,12 @@ UNIVERSE = list(dict.fromkeys([
     "MTCH","PARA","WBD","FOXA","FOX","IAC","ZG","ANGI","CARS",
     # S&P 500 extras not already covered
     "COST","AMGN","GILD","BIIB",   # already above but ensure dedup covers
-]))
+] + _SP400_TICKERS))
 
 # ── PHASE 1: Batch price download ──────────────────────────────────────────────
 print("=" * 72)
 print(f"  PHASE 1: Downloading price history for {len(UNIVERSE)} tickers (2017-2026)")
+print(f"  Universe: ~{len(UNIVERSE) - len(_SP400_TICKERS)} S&P 500 + {len(_SP400_TICKERS)} S&P 400 MidCap = Russell 1000 proxy")
 print("=" * 72)
 
 _raw = yf.download(
@@ -529,7 +556,7 @@ for period in PERIODS:
         r = run_period_strategy(period, strat_name, strat_cfg)
         all_results[period["name"]][strat_name] = r
         alpha = r["total_return"] - sp
-        beat  = "✓" if r["total_return"] > sp else "✗"
+        beat  = ">" if r["total_return"] > sp else "<"
         print(f"    {strat_name}  return: {r['total_return']:>+7.2f}%  "
               f"alpha: {alpha:>+7.2f}%  {beat}  "
               f"Spearman: {r['spearman']:>+.3f}  "
