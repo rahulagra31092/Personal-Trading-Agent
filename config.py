@@ -24,7 +24,7 @@ SCHWAB_CLIENT_SECRET: str | None = os.environ.get("SCHWAB_CLIENT_SECRET") or Non
 QUIVER_API_KEY: str | None = os.environ.get("QUIVER_API_KEY") or None
 GOOGLE_SHEET_ID: str | None = os.environ.get("GOOGLE_SHEET_ID") or None
 
-EXCLUDED_TICKERS: frozenset[str] = frozenset({"FUBO"})
+EXCLUDED_TICKERS: frozenset[str] = frozenset()
 
 
 def is_excluded(ticker: str) -> bool:

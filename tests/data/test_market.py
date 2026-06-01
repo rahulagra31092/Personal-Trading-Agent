@@ -33,13 +33,15 @@ def test_get_daily_bars_caches_result(mocker):
     get_daily_bars("AMZN", days=1)
     assert mock_client.list_aggs.call_count == 1
 
-def test_excluded_ticker_raises_on_bars():
-    with pytest.raises(ValueError, match="FUBO is excluded"):
-        get_daily_bars("FUBO", days=5)
+def test_excluded_ticker_raises_on_bars(monkeypatch):
+    monkeypatch.setattr("config.EXCLUDED_TICKERS", frozenset({"TESTEXCL"}))
+    with pytest.raises(ValueError, match="TESTEXCL is excluded"):
+        get_daily_bars("TESTEXCL", days=5)
 
-def test_excluded_ticker_raises_on_historical():
-    with pytest.raises(ValueError, match="FUBO is excluded"):
-        get_historical_prices("FUBO")
+def test_excluded_ticker_raises_on_historical(monkeypatch):
+    monkeypatch.setattr("config.EXCLUDED_TICKERS", frozenset({"TESTEXCL"}))
+    with pytest.raises(ValueError, match="TESTEXCL is excluded"):
+        get_historical_prices("TESTEXCL")
 
 def test_get_crypto_price_returns_float(mocker):
     mock_hist = pd.DataFrame({"Close": [95_000.0]})

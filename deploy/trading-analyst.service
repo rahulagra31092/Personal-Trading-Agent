@@ -1,0 +1,19 @@
+[Unit]
+Description=Trading Analyst FastAPI Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/trading-analyst
+EnvironmentFile=/opt/trading-analyst/.env
+Environment=TZ=America/New_York
+ExecStart=/opt/trading-analyst/.venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=trading-analyst
+
+[Install]
+WantedBy=multi-user.target

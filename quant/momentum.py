@@ -70,10 +70,10 @@ def compute_momentum_score(ticker: str, signal_date: Optional[str] = None) -> fl
                                           auto_adjust=True, end=end)
 
         if isinstance(hist.columns, pd.MultiIndex):
-            if "Close" in hist.columns.get_level_values(0):
-                hist = hist["Close"].to_frame(name="Close")
-            else:
-                hist.columns = hist.columns.droplevel(1)
+            close_data = hist["Close"]
+            if isinstance(close_data, pd.DataFrame):
+                close_data = close_data.iloc[:, 0]
+            hist = close_data.to_frame(name="Close")
 
         if "Close" not in hist.columns or len(hist) < _MIN_BARS:
             return 0.5

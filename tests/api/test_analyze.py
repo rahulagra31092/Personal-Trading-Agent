@@ -74,8 +74,10 @@ def test_analyze_returns_required_keys():
         assert key in data
 
 
-def test_analyze_excluded_ticker_returns_400():
-    resp = client.get("/analyze/FUBO")
+def test_analyze_excluded_ticker_returns_400(monkeypatch):
+    import config
+    monkeypatch.setattr(config, "EXCLUDED_TICKERS", frozenset({"TESTEXCL"}))
+    resp = client.get("/analyze/TESTEXCL")
     assert resp.status_code == 400
 
 
