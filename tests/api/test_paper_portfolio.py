@@ -8,6 +8,9 @@ from api.paper_portfolio import (
     get_account,
     rebalance,
     STARTING_CAPITAL,
+    get_raw_positions,
+    update_peak_prices,
+    check_trailing_stops,
 )
 
 
@@ -120,3 +123,97 @@ def test_initialize_is_idempotent():
         positions = get_positions()
     assert len(positions) == 1
     assert positions[0]["ticker"] == "AAPL"
+
+
+def test_update_peak_prices_sets_initial_peak():
+    initialize_portfolio([{"ticker": "NVDA", "shares": 1.0, "price": 100.0}])
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 120.0}):
+        update_peak_prices()
+    raw = get_raw_positions()
+    nvda = next(p for p in raw if p["ticker"] == "NVDA")
+    assert nvda["peak_price"] == pytest.approx(120.0)
+
+
+def test_update_peak_prices_does_not_decrease_peak():
+    initialize_portfolio([{"ticker": "NVDA", "shares": 1.0, "price": 100.0}])
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 150.0}):
+        update_peak_prices()
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 90.0}):
+        update_peak_prices()
+    raw = get_raw_positions()
+    nvda = next(p for p in raw if p["ticker"] == "NVDA")
+    assert nvda["peak_price"] == pytest.approx(150.0)
+
+
+def test_check_trailing_stops_no_trigger_within_threshold():
+    initialize_portfolio([{"ticker": "NVDA", "shares": 1.0, "price": 100.0}])
+    # Peak=110, current=92 → drop 16.4% < 20% → no trigger
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 110.0}):
+        update_peak_prices()
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 92.0}):
+        stops = check_trailing_stops()
+    assert stops == []
+
+
+def test_check_trailing_stops_fires_at_20pct_drop():
+    initialize_portfolio([{"ticker": "NVDA", "shares": 1.0, "price": 100.0}])
+    # Peak=125, current=99 → drop 20.8% > 20% → trigger
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 125.0}):
+        update_peak_prices()
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 99.0}):
+        stops = check_trailing_stops()
+    assert len(stops) == 1
+    assert stops[0]["ticker"] == "NVDA"
+    assert stops[0]["trail_drop_pct"] < -20.0
+
+
+def test_check_trailing_stops_uses_avg_cost_as_initial_peak():
+    # No peak_price set yet → avg_cost is treated as initial peak
+    initialize_portfolio([{"ticker": "NVDA", "shares": 1.0, "price": 100.0}])
+    # Drop 22% from cost before any peak update
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 78.0}):
+        stops = check_trailing_stops()
+    assert len(stops) == 1
+    assert stops[0]["ticker"] == "NVDA"
+
+
+def test_check_trailing_stops_no_positions_returns_empty():
+    stops = check_trailing_stops()
+    assert stops == []
+
+
+def test_check_trailing_stops_exact_boundary_does_not_fire():
+    # current == peak * 0.80 exactly — strict less-than means NO trigger
+    initialize_portfolio([{"ticker": "NVDA", "shares": 1.0, "price": 100.0}])
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 125.0}):
+        update_peak_prices()
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 100.0}):
+        stops = check_trailing_stops()
+    assert stops == []
+
+
+def test_check_trailing_stops_one_cent_below_boundary_fires():
+    initialize_portfolio([{"ticker": "NVDA", "shares": 1.0, "price": 100.0}])
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 125.0}):
+        update_peak_prices()
+    with patch("api.paper_portfolio._fetch_prices", return_value={"NVDA": 99.99}):
+        stops = check_trailing_stops()
+    assert len(stops) == 1
+
+
+def test_check_trailing_stops_returns_all_triggered():
+    initialize_portfolio([
+        {"ticker": "NVDA", "shares": 1.0, "price": 100.0},
+        {"ticker": "AVGO", "shares": 1.0, "price": 200.0},
+        {"ticker": "MU",   "shares": 1.0, "price": 50.0},
+    ])
+    with patch("api.paper_portfolio._fetch_prices",
+               return_value={"NVDA": 120.0, "AVGO": 220.0, "MU": 60.0}):
+        update_peak_prices()
+    # NVDA: 90/120 = 25% drop → fires; AVGO: 170/220 = 22.7% drop → fires; MU: 55/60 = 8.3% → no fire
+    with patch("api.paper_portfolio._fetch_prices",
+               return_value={"NVDA": 90.0, "AVGO": 170.0, "MU": 55.0}):
+        stops = check_trailing_stops()
+    triggered = {s["ticker"] for s in stops}
+    assert triggered == {"NVDA", "AVGO"}
+    assert "MU" not in triggered

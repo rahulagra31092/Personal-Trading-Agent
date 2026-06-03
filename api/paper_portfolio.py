@@ -70,6 +70,13 @@ def init_paper_db() -> None:
                 sector              TEXT
             );
         """)
+    # Idempotent schema migrations
+    with _conn() as con:
+        try:
+            con.execute("ALTER TABLE paper_positions ADD COLUMN peak_price REAL")
+        except sqlite3.OperationalError as exc:
+            if "duplicate column" not in str(exc):
+                raise
 
 
 def _conn() -> sqlite3.Connection:
@@ -255,6 +262,61 @@ def get_raw_positions() -> list[dict]:
     with _conn() as con:
         rows = con.execute("SELECT * FROM paper_positions").fetchall()
     return [dict(r) for r in rows]
+
+
+def update_peak_prices() -> None:
+    """Refresh the all-time-high price for each held position. Call once per daily run."""
+    raw = get_raw_positions()
+    if not raw:
+        return
+    # Guard against corrupt zero-cost positions
+    valid = [p for p in raw if p.get("avg_cost") and p.get("shares")]
+    if not valid:
+        return
+    prices = _fetch_prices([p["ticker"] for p in valid])
+    # Single connection for write phase
+    with _conn() as con:
+        for p in valid:
+            ticker = p["ticker"]
+            current = prices.get(ticker)
+            if current is None:
+                continue
+            peak = p.get("peak_price") or p["avg_cost"]
+            if current > peak:
+                con.execute(
+                    "UPDATE paper_positions SET peak_price = ? WHERE ticker = ?",
+                    (round(current, 4), ticker),
+                )
+
+
+def check_trailing_stops(trail_pct: float = 0.20) -> list[dict]:
+    """
+    Return positions whose current price is strictly below peak * (1 - trail_pct).
+    A drop of exactly trail_pct does NOT trigger.
+    Each entry: {ticker, price, peak_price, trail_drop_pct, reason}.
+    """
+    raw = get_raw_positions()
+    if not raw:
+        return []
+    prices = _fetch_prices([p["ticker"] for p in raw])
+    stops = []
+    for p in raw:
+        ticker = p["ticker"]
+        if not p.get("avg_cost") or not p.get("shares"):
+            logger.warning("Skipping position %s: zero avg_cost or shares", ticker)
+            continue
+        current = prices.get(ticker, p["avg_cost"])
+        peak = p.get("peak_price") or p["avg_cost"]
+        if peak > 0 and current < peak * (1.0 - trail_pct):
+            drop_pct = round((current / peak - 1.0) * 100, 2)
+            stops.append({
+                "ticker": ticker,
+                "price": current,
+                "peak_price": peak,
+                "trail_drop_pct": drop_pct,
+                "reason": f"Trailing stop: {drop_pct:.1f}% from ${peak:.2f} peak",
+            })
+    return stops
 
 
 def _fetch_prices(tickers: list[str]) -> dict[str, float]:
