@@ -40,6 +40,16 @@ MIDCAP_UNIVERSE: list[str] = [
 
 BRIEFING_TICKERS: list[str] = BLUE_CHIP_UNIVERSE + MIDCAP_UNIVERSE
 
+# ---------------------------------------------------------------------------
+# Rebalance thresholds
+# ---------------------------------------------------------------------------
+_SELL_SCORE_MIN    = 0.45   # Exit if conviction falls to Low / Avoid
+_SELL_DRAWDOWN_PCT = -15.0  # Hard stop: exit if position down > 15%
+_RANK_SELL_CUTOFF  = 30     # Sell if ranked outside top-30 AND score < buy min
+_BUY_SCORE_MIN     = 0.55   # Minimum Moderate conviction to enter a new position
+_MIN_HOLD_DAYS     = 30     # Don't rotate out within 30 days (except hard stop)
+_MAX_POSITIONS     = 20
+
 
 # ---------------------------------------------------------------------------
 # Scoring helpers
@@ -303,6 +313,181 @@ def _paper_portfolio_blocks(portfolio_value: dict, now: datetime, is_monthly: bo
 
 
 # ---------------------------------------------------------------------------
+# Monthly rebalance engine
+# ---------------------------------------------------------------------------
+
+def _run_monthly_rebalance(all_results: list[dict], now: datetime) -> dict:
+    """
+    Score current paper positions against the full universe and rotate.
+
+    Sell rules (in priority order):
+      1. Hard stop: drawdown ≤ −15%  (no minimum hold — capital preservation)
+      2. Score < 0.45 AND held ≥ 30 days  (conviction degraded to Low/Avoid)
+      3. Ranked outside top-30 of universe AND score < 0.55 AND held ≥ 30 days
+         (better opportunities exist; two-condition gate prevents over-trading)
+
+    Buy rules:
+      - Top-ranked unowned tickers with score ≥ 0.55 (Moderate or better)
+      - Fill up to 20 total positions using freed cash ($500 per slot)
+      - If no qualifying buys exist, hold cash until next rebalance
+    """
+    from api.paper_portfolio import get_positions, rebalance as execute_rebalance
+    from datetime import date as date_type
+
+    positions = get_positions()
+    if not positions:
+        return {"sells": [], "buys": [], "held": []}
+
+    score_map = {r["ticker"]: r for r in all_results}
+    ranked_all = sorted(
+        all_results,
+        key=lambda r: r["signal"]["composite_score"],
+        reverse=True,
+    )
+    rank_map = {r["ticker"]: i + 1 for i, r in enumerate(ranked_all)}
+    today = now.date()
+
+    sells: list[dict] = []
+    kept: set[str] = set()
+
+    for pos in positions:
+        ticker = pos["ticker"]
+        try:
+            entry = date_type.fromisoformat(pos["entry_date"])
+        except Exception:
+            entry = today
+        days_held = (today - entry).days
+        drawdown = pos["pnl_pct"]
+        scored = score_map.get(ticker)
+        score = scored["signal"]["composite_score"] if scored else 0.0
+        rank = rank_map.get(ticker, 999)
+
+        # Rule 1: hard stop — always sell, ignore hold period
+        if drawdown <= _SELL_DRAWDOWN_PCT:
+            sells.append({
+                "ticker": ticker,
+                "price": pos["current_price"],
+                "pnl_pct": drawdown,
+                "pnl": pos["pnl"],
+                "reason": f"Hard stop: {drawdown:.1f}% drawdown exceeded −15% threshold",
+            })
+            continue
+
+        # Rules 2 & 3 require minimum hold period
+        if days_held < _MIN_HOLD_DAYS:
+            kept.add(ticker)
+            continue
+
+        # Rule 2: conviction degraded to Low or Avoid
+        if score < _SELL_SCORE_MIN:
+            sells.append({
+                "ticker": ticker,
+                "price": pos["current_price"],
+                "pnl_pct": drawdown,
+                "pnl": pos["pnl"],
+                "reason": f"Score {score:.2f} ({_conviction(score)}) — conviction below minimum",
+            })
+            continue
+
+        # Rule 3: rank dropped outside top-30 with only moderate conviction
+        if rank > _RANK_SELL_CUTOFF and score < _BUY_SCORE_MIN:
+            sells.append({
+                "ticker": ticker,
+                "price": pos["current_price"],
+                "pnl_pct": drawdown,
+                "pnl": pos["pnl"],
+                "reason": f"Ranked #{rank} in universe, score {score:.2f} — better opportunities exist",
+            })
+            continue
+
+        kept.add(ticker)
+
+    sold_set = {s["ticker"] for s in sells}
+    slots = _MAX_POSITIONS - len(kept)
+
+    buys: list[dict] = []
+    for r in ranked_all:
+        if len(buys) >= slots:
+            break
+        t = r["ticker"]
+        if t in kept or t in sold_set:
+            continue
+        score = r["signal"]["composite_score"]
+        if score < _BUY_SCORE_MIN:
+            break  # sorted descending — no qualifying candidates remain
+        price = r["current_price"]
+        if price <= 0:
+            continue
+        buys.append({
+            "ticker": t,
+            "shares": round(POSITION_SIZE / price, 6),
+            "price": price,
+            "score": score,
+            "conviction": _conviction(score),
+        })
+
+    if sells or buys:
+        execute_rebalance(sells, buys)
+        logger.info("Monthly rebalance complete: sold %d, bought %d", len(sells), len(buys))
+
+    return {"sells": sells, "buys": buys, "held": sorted(kept)}
+
+
+def _rebalance_blocks(result: dict, now: datetime) -> list[dict]:
+    sells = result["sells"]
+    buys  = result["buys"]
+    held  = result["held"]
+    date_str = now.strftime("%b %d, %Y")
+
+    if not sells and not buys:
+        return [{
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": (
+                f"*Monthly Rebalance — {date_str}*\n"
+                f"No changes — all {len(held)} positions passed review. "
+                "Portfolio is healthy."
+            )},
+        }]
+
+    header_text = (
+        f"Sold *{len(sells)}* · Bought *{len(buys)}* · Held *{len(held)}*"
+    )
+    blocks: list[dict] = [
+        {"type": "header", "text": {"type": "plain_text", "text": f"Monthly Rebalance — {date_str}"}},
+        {"type": "section", "text": {"type": "mrkdwn", "text": header_text}},
+    ]
+
+    if sells:
+        lines = ["*Sold*"]
+        for s in sells:
+            sign = "+" if s["pnl_pct"] >= 0 else ""
+            lines.append(
+                f"• *{s['ticker']}*  {sign}{s['pnl_pct']:.1f}% ({sign}${s['pnl']:.0f})"
+                f"  —  {s['reason']}"
+            )
+        blocks.append({"type": "divider"})
+        blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": "\n".join(lines)}})
+
+    if buys:
+        lines = ["*Bought*"]
+        for b in buys:
+            lines.append(
+                f"• *{b['ticker']}*  {b['conviction']} ({b['score']:.2f})"
+                f"  —  {b['shares']:.2f} shares @ ${b['price']:.0f}"
+            )
+        blocks.append({"type": "divider"})
+        blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": "\n".join(lines)}})
+
+    blocks.append({
+        "type": "context",
+        "elements": [{"type": "mrkdwn", "text": (
+            "Sell rules: hard stop −15%  ·  score <0.45  ·  rank >30 & score <0.55  ·  30-day min hold"
+        )}],
+    })
+    return blocks
+
+
+# ---------------------------------------------------------------------------
 # Main entry points
 # ---------------------------------------------------------------------------
 
@@ -323,7 +508,7 @@ def send_daily_briefing(
     blue_chip_tickers: list[str] | None = None,
     midcap_tickers: list[str] | None = None,
     n_picks: int = 10,
-) -> None:
+) -> list[dict]:
     """
     Send 2 Slack messages:
     1. Market intel brief + real portfolio + top picks (blue chip + mid-small)
@@ -492,26 +677,41 @@ def send_daily_briefing(
         _post_to_slack({"text": f"Paper Portfolio — {date_str}", "blocks": msg2_blocks})
         logger.info("Message 2 sent.")
 
+    return all_results
+
 
 def send_monthly_briefing(
     blue_chip_tickers: list[str] | None = None,
     midcap_tickers: list[str] | None = None,
     n_picks: int = 25,
 ) -> None:
-    """Monthly version: top 25 picks + full rebalance review."""
-    send_daily_briefing(
+    """Monthly version: top 25 picks + automated rebalance + portfolio summary."""
+    all_results = send_daily_briefing(
         blue_chip_tickers=blue_chip_tickers,
         midcap_tickers=midcap_tickers,
         n_picks=n_picks,
     )
     now = datetime.now(_ET)
-    if is_initialized():
-        paper_value = get_portfolio_value()
-        blocks = _paper_portfolio_blocks(paper_value, now, is_monthly=True)
-        _post_to_slack(
-            {
-                "text": f"Monthly Portfolio Summary — {now.strftime('%B %Y')}",
-                "blocks": blocks,
-            }
-        )
-        logger.info("Monthly paper summary sent.")
+
+    if not is_initialized():
+        return
+
+    # Run automated rebalance using today's model scores
+    rebalance_result = _run_monthly_rebalance(all_results, now)
+
+    # Message 3: rebalance summary
+    rebalance_blks = _rebalance_blocks(rebalance_result, now)
+    _post_to_slack({
+        "text": f"Monthly Rebalance — {now.strftime('%B %Y')}",
+        "blocks": rebalance_blks,
+    })
+    logger.info("Monthly rebalance message sent.")
+
+    # Message 4: updated portfolio after rebalance
+    paper_value = get_portfolio_value()
+    blocks = _paper_portfolio_blocks(paper_value, now, is_monthly=True)
+    _post_to_slack({
+        "text": f"Monthly Portfolio Summary — {now.strftime('%B %Y')}",
+        "blocks": blocks,
+    })
+    logger.info("Monthly paper summary sent.")
