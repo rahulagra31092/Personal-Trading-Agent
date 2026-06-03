@@ -69,6 +69,12 @@ def init_paper_db() -> None:
                 regime_at_entry     TEXT,
                 sector              TEXT
             );
+            CREATE TABLE IF NOT EXISTS score_history (
+                ticker          TEXT NOT NULL,
+                score_date      TEXT NOT NULL,
+                composite_score REAL NOT NULL,
+                PRIMARY KEY (ticker, score_date)
+            );
         """)
     # Idempotent schema migrations
     with _conn() as con:
@@ -188,6 +194,81 @@ def get_open_outcome_tickers() -> set[str]:
         return {r["ticker"] for r in rows}
     except Exception:
         return set()
+
+
+def log_daily_scores(scores: dict[str, float], date_str: str | None = None) -> None:
+    """
+    Write composite scores for all scored tickers to score_history.
+    Upserts — safe to call multiple times per day.
+    date_str: ISO date string e.g. "2026-01-15". Defaults to today.
+    """
+    if not scores:
+        return
+    if date_str is None:
+        date_str = date.today().isoformat()
+    init_paper_db()
+    clean = []
+    for t, s in scores.items():
+        try:
+            clean.append((t.upper(), date_str, round(float(s), 4)))
+        except (TypeError, ValueError):
+            logger.warning("log_daily_scores: skipping bad score for %s: %r", t, s)
+    if not clean:
+        return
+    try:
+        with _conn() as con:
+            con.executemany(
+                """INSERT INTO score_history (ticker, score_date, composite_score)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT(ticker, score_date) DO UPDATE SET composite_score = excluded.composite_score""",
+                clean,
+            )
+    except Exception as exc:
+        logger.warning("log_daily_scores DB error: %s", exc)
+
+
+def get_score_trend(ticker: str, as_of: str | None = None) -> dict:
+    """
+    Return the latest composite score and 5-day delta for ticker.
+    as_of: ISO date string for testing (defaults to today).
+    Returns: {latest_score, delta_5d, direction}
+    direction: "rising" | "falling" | "flat" | "insufficient_data"
+    """
+    init_paper_db()
+    if as_of is None:
+        as_of = date.today().isoformat()
+    try:
+        with _conn() as con:
+            rows = con.execute(
+                """SELECT composite_score FROM score_history
+                   WHERE ticker = ? AND score_date <= ?
+                   ORDER BY score_date DESC LIMIT 6""",
+                (ticker.upper(), as_of),
+            ).fetchall()
+    except Exception as exc:
+        logger.warning("get_score_trend failed for %s: %s", ticker, exc)
+        return {"latest_score": None, "delta_5d": None, "direction": "insufficient_data"}
+
+    if not rows:
+        return {"latest_score": None, "delta_5d": None, "direction": "insufficient_data"}
+
+    scores_desc = [r[0] for r in rows]
+    latest = scores_desc[0]
+
+    if len(scores_desc) < 6:
+        return {"latest_score": latest, "delta_5d": None, "direction": "insufficient_data"}
+
+    oldest = scores_desc[-1]
+    delta = round(latest - oldest, 4)
+
+    if delta > 0.02:
+        direction = "rising"
+    elif delta < -0.02:
+        direction = "falling"
+    else:
+        direction = "flat"
+
+    return {"latest_score": latest, "delta_5d": delta, "direction": direction}
 
 
 # ---------------------------------------------------------------------------

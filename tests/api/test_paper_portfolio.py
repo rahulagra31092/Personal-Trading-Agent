@@ -11,6 +11,8 @@ from api.paper_portfolio import (
     get_raw_positions,
     update_peak_prices,
     check_trailing_stops,
+    log_daily_scores,
+    get_score_trend,
 )
 
 
@@ -217,3 +219,68 @@ def test_check_trailing_stops_returns_all_triggered():
     triggered = {s["ticker"] for s in stops}
     assert triggered == {"NVDA", "AVGO"}
     assert "MU" not in triggered
+
+
+def test_log_daily_scores_stores_records():
+    scores = {"NVDA": 0.72, "AAPL": 0.55, "XOM": 0.38}
+    log_daily_scores(scores, date_str="2026-01-10")
+    trend = get_score_trend("NVDA", as_of="2026-01-10")
+    assert trend["latest_score"] == pytest.approx(0.72)
+
+
+def test_get_score_trend_no_history_returns_none_delta():
+    trend = get_score_trend("UNKNOWN_TICKER_ZZZ", as_of="2026-01-10")
+    assert trend["delta_5d"] is None
+    assert trend["latest_score"] is None
+
+
+def test_get_score_trend_rising_signal():
+    # Score rises from 0.50 to 0.65 over 6 days
+    for i, score in enumerate([0.50, 0.53, 0.56, 0.58, 0.61, 0.65]):
+        log_daily_scores({"MSFT_TEST": score}, date_str=f"2026-01-0{i+1}")
+    trend = get_score_trend("MSFT_TEST", as_of="2026-01-06")
+    assert trend["delta_5d"] == pytest.approx(0.65 - 0.50, abs=0.001)
+    assert trend["direction"] == "rising"
+
+
+def test_get_score_trend_falling_signal():
+    for i, score in enumerate([0.70, 0.67, 0.64, 0.61, 0.58, 0.54]):
+        log_daily_scores({"AMZN_TEST": score}, date_str=f"2026-01-0{i+1}")
+    trend = get_score_trend("AMZN_TEST", as_of="2026-01-06")
+    assert trend["delta_5d"] < 0
+    assert trend["direction"] == "falling"
+
+
+def test_get_score_trend_flat_signal():
+    for i in range(6):
+        log_daily_scores({"META_TEST": 0.60}, date_str=f"2026-01-0{i+1}")
+    trend = get_score_trend("META_TEST", as_of="2026-01-06")
+    assert trend["direction"] == "flat"
+
+
+def test_log_daily_scores_idempotent_same_day():
+    # Writing the same ticker/date twice should update (upsert)
+    log_daily_scores({"NVDA_TEST": 0.60}, date_str="2026-01-15")
+    log_daily_scores({"NVDA_TEST": 0.65}, date_str="2026-01-15")
+    trend = get_score_trend("NVDA_TEST", as_of="2026-01-15")
+    assert trend["latest_score"] == pytest.approx(0.65)
+
+
+def test_log_daily_scores_writes_all_tickers():
+    scores = {"ALPHA_T": 0.72, "BETA_T": 0.55, "GAMMA_T": 0.38}
+    log_daily_scores(scores, date_str="2026-02-10")
+    for t, s in scores.items():
+        assert get_score_trend(t, as_of="2026-02-10")["latest_score"] == pytest.approx(s)
+
+
+def test_get_score_trend_excludes_future_scores():
+    log_daily_scores({"FUTURE_T": 0.5}, date_str="2026-02-10")
+    log_daily_scores({"FUTURE_T": 0.9}, date_str="2026-02-20")
+    trend = get_score_trend("FUTURE_T", as_of="2026-02-10")
+    assert trend["latest_score"] == pytest.approx(0.5)
+
+
+def test_score_trend_ticker_case_insensitive():
+    log_daily_scores({"lower_t": 0.7}, date_str="2026-02-10")
+    trend = get_score_trend("LOWER_T", as_of="2026-02-10")
+    assert trend["latest_score"] == pytest.approx(0.7)
