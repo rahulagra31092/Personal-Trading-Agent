@@ -8,12 +8,13 @@ import requests
 
 from api.analyze import analyze_ticker
 from api.paper_portfolio import (
-    get_portfolio_value, is_initialized, POSITION_SIZE,
-    log_trade_entry, log_trade_exit, get_open_outcome_tickers,
+    get_portfolio_value, is_initialized, POSITION_SIZE, STARTING_CAPITAL,
+    log_trade_entry, log_trade_exit, get_open_outcome_tickers, get_account,
 )
 from data.earnings import days_to_earnings
 from quant.regime import get_market_regime
 from quant.portfolio_risk import compute_portfolio_beta
+from quant.position_sizing import compute_conviction_position_size
 from smart_money.market_intel import (
     build_market_brief,
     get_index_snapshot,
@@ -499,6 +500,62 @@ def _log_new_entries(
         )
 
 
+def _deploy_idle_cash(
+    all_results: list[dict],
+    score_map: dict[str, dict],
+    now: datetime,
+    regime: dict,
+) -> None:
+    """
+    If cash exceeds 2 × POSITION_SIZE after trailing-stop sells, buy the top
+    unowned BUY-qualified ticker immediately (no waiting for monthly rebalance).
+    """
+    from api.paper_portfolio import get_account as _get_account, get_raw_positions, rebalance as _execute_rebalance
+
+    account = _get_account()
+    cash = account.get("cash", 0.0)
+    if cash < 2 * POSITION_SIZE:
+        return
+
+    held = {p["ticker"] for p in get_raw_positions()}
+    regime_factor = float(regime.get("position_factor", 1.0))
+    total_capital = account.get("starting_capital", STARTING_CAPITAL)
+
+    ranked = sorted(
+        [r for r in all_results if r["signal"]["label"] == "BUY"],
+        key=lambda r: r["signal"]["composite_score"],
+        reverse=True,
+    )
+
+    for r in ranked:
+        t = r["ticker"]
+        if t in held:
+            continue
+        score = r["signal"]["composite_score"]
+        if score < _BUY_SCORE_MIN:
+            break
+        price = r["current_price"]
+        if price <= 0:
+            continue
+
+        dollar_size = compute_conviction_position_size(
+            base_size=POSITION_SIZE,
+            composite_score=score,
+            regime_factor=regime_factor,
+            garch_vol_scalar=r.get("garch_vol_scalar", 0.5),
+            total_capital=total_capital,
+        )
+        dollar_size = min(dollar_size, cash)
+        shares = round(dollar_size / price, 6)
+        _execute_rebalance([], [{"ticker": t, "shares": shares, "price": price}])
+        _log_new_entries(
+            [t], score_map, now.date().isoformat(),
+            float(regime.get("vix", 0.0)), regime.get("regime", "unknown"),
+        )
+        logger.info("Cash-deployment trigger: bought %s (%.0f shares @ $%.2f)", t, shares, price)
+        break
+
+
 def _log_exits(
     sold_positions: list[dict],
     exit_date: str,
@@ -628,12 +685,22 @@ def _run_monthly_rebalance(all_results: list[dict], now: datetime, score_map: di
         price = r["current_price"]
         if price <= 0:
             continue
+        regime_factor = float(get_market_regime().get("position_factor", 1.0))
+        vol_scalar = score_map.get(t, {}).get("garch_vol_scalar", 0.5) if score_map else 0.5
+        dollar_size = compute_conviction_position_size(
+            base_size=POSITION_SIZE,
+            composite_score=score,
+            regime_factor=regime_factor,
+            garch_vol_scalar=vol_scalar,
+            total_capital=get_account().get("starting_capital", STARTING_CAPITAL),
+        )
         buys.append({
             "ticker": t,
-            "shares": round(POSITION_SIZE / price, 6),
+            "shares": round(dollar_size / price, 6),
             "price": price,
             "score": score,
             "conviction": _conviction(score),
+            "dollar_size": dollar_size,
         })
 
     if sells or buys:
@@ -788,10 +855,20 @@ def send_daily_briefing(
             key=lambda r: r["signal"]["composite_score"],
             reverse=True,
         )[:20]
+        regime_factor = float(regime.get("position_factor", 1.0))
         buys = [
             {
                 "ticker": r["ticker"],
-                "shares": round(POSITION_SIZE / r["current_price"], 6) if r["current_price"] > 0 else 0,
+                "shares": round(
+                    compute_conviction_position_size(
+                        base_size=POSITION_SIZE,
+                        composite_score=r["signal"]["composite_score"],
+                        regime_factor=regime_factor,
+                        garch_vol_scalar=r.get("garch_vol_scalar", 0.5),
+                        total_capital=STARTING_CAPITAL,
+                    ) / r["current_price"],
+                    6,
+                ),
                 "price": r["current_price"],
             }
             for r in top20
@@ -823,6 +900,10 @@ def send_daily_briefing(
             _execute_rebalance(trail_sells, [])
             _log_exits(trailing_stops, now.date().isoformat())
             logger.info("Trailing stops fired: %s", [s["ticker"] for s in trailing_stops])
+
+    # Cash deployment: redeploy trailing-stop proceeds same day
+    if is_initialized() and all_results:
+        _deploy_idle_cash(all_results, score_map, now, regime)
 
     # Paper portfolio caution check
     paper_value = get_portfolio_value() if is_initialized() else {"positions": []}

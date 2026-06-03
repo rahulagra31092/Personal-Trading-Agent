@@ -86,6 +86,7 @@ def analyze_ticker(ticker: str) -> dict:
         "current_price": round(current_price, 2),
         "atr_stop": ind["atr_stop"],
         "vol_regime": garch["vol_regime"],
+        "garch_vol_scalar": garch["vol_scalar"],
         "rsi": ind["rsi"],
         "trend_regime": ind["ema_trend"],
         "trade_card": trade_card,
