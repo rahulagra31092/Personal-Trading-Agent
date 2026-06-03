@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import requests
 
 from api.analyze import analyze_ticker
-from api.paper_portfolio import get_portfolio_value, is_initialized
+from api.paper_portfolio import get_portfolio_value, is_initialized, POSITION_SIZE
 from quant.regime import get_market_regime
 from smart_money.market_intel import (
     build_market_brief,
@@ -370,6 +370,27 @@ def send_daily_briefing(
     # Real portfolio from Google Sheets
     sheet_positions = fetch_google_sheet_portfolio()
     real_positions  = score_real_portfolio(sheet_positions) if sheet_positions else []
+
+    # Auto-initialize paper portfolio on first run using today's top 20 picks
+    if not is_initialized():
+        top20 = sorted(
+            all_results,
+            key=lambda r: r["signal"]["composite_score"],
+            reverse=True,
+        )[:20]
+        buys = [
+            {
+                "ticker": r["ticker"],
+                "shares": round(POSITION_SIZE / r["current_price"], 6) if r["current_price"] > 0 else 0,
+                "price": r["current_price"],
+            }
+            for r in top20
+            if r["current_price"] > 0
+        ]
+        if buys:
+            from api.paper_portfolio import initialize_portfolio
+            initialize_portfolio(buys)
+            logger.info("Paper portfolio auto-initialized with %d positions.", len(buys))
 
     # Paper portfolio caution check
     paper_value = get_portfolio_value() if is_initialized() else {"positions": []}
