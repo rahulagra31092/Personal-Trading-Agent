@@ -94,15 +94,17 @@ def test_sharpe_is_float():
     assert isinstance(result["sharpe_ratio"], float)
 
 
-def _mock_signal(technical_score, arima_score, **kwargs):
+def _mock_signal(technical_score, **kwargs):
     """Mock signal generator that always returns BUY for pinned tests."""
     return {
         "composite_score": 0.8,
         "label": "BUY",
         "layer_scores": {
             "technical": 0.8,
-            "arima": 0.8,
-            "smart_money": 0.5,
+            "momentum": 0.8,
+            "quality": 0.5,
+            "congress": 0.5,
+            "trump_policy": 0.5,
             "news_reaction": 0.5,
             "earnings": 0.5,
         },

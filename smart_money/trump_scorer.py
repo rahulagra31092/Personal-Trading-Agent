@@ -64,7 +64,8 @@ TICKER_POLICY: dict[str, list[tuple[str, str, float]]] = {
     "META":  [("ai_invest","tailwind",+0.04),("deregulation","tailwind",+0.03)],
     "AMZN":  [("tariff","headwind",-0.04),("ai_invest","tailwind",+0.04),
               ("deregulation","tailwind",+0.03)],
-    "TSLA":  [("deregulation","tailwind",+0.07),("energy_boost","tailwind",+0.03)],
+    "TSLA":  [("deregulation","tailwind",+0.07),("energy_boost","tailwind",+0.03),
+              ("tariff","tailwind",+0.03)],   # domestic EV, benefits from import tariffs on foreign EVs
     "ORCL":  [("ai_invest","tailwind",+0.05)],
     "CRM":   [("ai_invest","tailwind",+0.04)],
     "IBM":   [("ai_invest","tailwind",+0.04),("deregulation","tailwind",+0.03)],
@@ -124,7 +125,6 @@ TICKER_POLICY: dict[str, list[tuple[str, str, float]]] = {
     "PH":  [("tariff","tailwind",+0.04)],
     "EMR": [("energy_boost","tailwind",+0.04)],
     "MMM": [("tariff","tailwind",+0.04)],
-    "RTX": [("defense_spend","tailwind",+0.09)],
     "UPS": [("tariff","headwind",-0.03)],
     "FDX": [("tariff","headwind",-0.03)],
     "UBER":[("deregulation","tailwind",+0.05)],
@@ -188,7 +188,16 @@ TICKER_POLICY: dict[str, list[tuple[str, str, float]]] = {
     # Autos
     "F":    [("tariff","tailwind",+0.05)],
     "GM":   [("tariff","tailwind",+0.05)],
-    "TSLA": [("deregulation","tailwind",+0.07)],
+    # Semiconductors — additions for universe completeness
+    "AVGO": [("china_tension","headwind",-0.06),("ai_invest","tailwind",+0.08),
+             ("tariff","headwind",-0.04)],
+    "DELL": [("tariff","tailwind",+0.04),("ai_invest","tailwind",+0.05)],
+    # Cybersecurity — China tension increases demand; deregulation eases compliance costs
+    "ZS":   [("china_tension","tailwind",+0.04),("deregulation","tailwind",+0.03)],
+    # Data / cloud platforms — AI investment tailwind
+    "SNOW": [("ai_invest","tailwind",+0.05)],
+    "WDAY": [("ai_invest","tailwind",+0.03),("deregulation","tailwind",+0.02)],
+    "HUBS": [("ai_invest","tailwind",+0.03),("deregulation","tailwind",+0.02)],
 }
 
 
@@ -241,6 +250,17 @@ def score_active_tags(texts: list[str]) -> dict[str, float]:
                     break
     total = max(len(texts), 1)
     return {tag: min(hits[tag] / total, 1.0) for tag in POLICY_TAGS}
+
+
+def compute_trump_policy_score(ticker: str, days: int = 7) -> float:
+    """
+    Standalone [0, 1] factor score for White House policy exposure.
+    0.5 = neutral / no mapped policy. >0.5 = net tailwind. <0.5 = net headwind.
+    """
+    modifier = compute_trump_modifier(ticker, days)
+    # modifier in [-0.15, +0.15]; map to [0.0, 1.0] with 0.5 as neutral
+    score = 0.5 + modifier / 0.15 * 0.5
+    return round(max(0.10, min(0.90, score)), 4)
 
 
 def compute_trump_modifier(ticker: str, days: int = 7) -> float:

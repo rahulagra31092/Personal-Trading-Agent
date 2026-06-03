@@ -2,7 +2,6 @@ import math
 import logging
 
 from quant.indicators import compute_indicators
-from quant.forecast import compute_arima_score
 from quant.signals import compute_signal
 
 logger = logging.getLogger(__name__)
@@ -23,11 +22,7 @@ def run_backtest(
         prices = [b["c"] for b in history]
         try:
             ind = compute_indicators(history)
-            fcast = compute_arima_score(prices)
-            sig = compute_signal(
-                technical_score=ind["technical_score"],
-                arima_score=fcast["arima_score"],
-            )
+            sig = compute_signal(technical_score=ind["technical_score"])
         except Exception as exc:
             logger.debug("Skipping bar %d: %s", i, exc)
             continue

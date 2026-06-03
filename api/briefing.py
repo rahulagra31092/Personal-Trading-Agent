@@ -1,13 +1,17 @@
 """Daily and monthly Slack briefings — two messages per run."""
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as date_type
 from zoneinfo import ZoneInfo
 
 import requests
 
 from api.analyze import analyze_ticker
-from api.paper_portfolio import get_portfolio_value, is_initialized, POSITION_SIZE
+from api.paper_portfolio import (
+    get_portfolio_value, is_initialized, POSITION_SIZE,
+    log_trade_entry, log_trade_exit, get_open_outcome_tickers,
+)
+from data.earnings import days_to_earnings
 from quant.regime import get_market_regime
 from smart_money.market_intel import (
     build_market_brief,
@@ -25,17 +29,34 @@ _ET = ZoneInfo("America/New_York")
 # ---------------------------------------------------------------------------
 
 BLUE_CHIP_UNIVERSE: list[str] = [
+    # Mega-cap tech + AI
     "AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "AVGO",
-    "LLY", "V", "MA", "UNH", "JPM", "XOM", "COST", "HD", "NFLX",
-    "CRM", "AMD", "QCOM", "BAC", "GS", "JNJ", "CVX", "WMT", "MU",
-    "LRCX", "AMAT", "ARM", "PLTR", "GE", "CAT", "ABBV", "PG", "KO",
+    "CRM", "AMD", "QCOM", "MU", "LRCX", "AMAT", "ARM", "PLTR",
+    "ORCL", "IBM",
+    # Large-cap growth (moved from midcap)
+    "DDOG", "NET", "ZS",
+    # Financials
+    "JPM", "BAC", "GS", "V", "MA", "SCHW",
+    # Healthcare / pharma
+    "LLY", "UNH", "JNJ", "ABBV",
+    # Consumer / retail
+    "COST", "HD", "WMT", "NFLX", "PG", "KO",
+    # Energy
+    "XOM", "CVX",
+    # Defense (new)
+    "LMT", "NOC", "RTX",
+    # Industrials (new)
+    "GE", "CAT", "ETN",
+    # Semiconductors missed in Jan test (new)
+    "MRVL", "DELL",
 ]
 
 MIDCAP_UNIVERSE: list[str] = [
-    "DDOG", "NET", "ZS", "BILL", "CELH", "DUOL", "MNDY", "HIMS",
+    "BILL", "CELH", "DUOL", "MNDY", "HIMS",
     "NTNX", "PSTG", "GTLB", "AFRM", "SMCI", "FSLR", "ENPH",
     "PAYC", "CAVA", "ELF", "CROX", "CHWY", "SAIA", "GMED", "PODD",
     "RXRX", "ASAN", "LYFT", "HOOD", "SOFI", "APP", "RBLX",
+    "WDAY", "HUBS", "SNOW",
 ]
 
 BRIEFING_TICKERS: list[str] = BLUE_CHIP_UNIVERSE + MIDCAP_UNIVERSE
@@ -50,6 +71,28 @@ _BUY_SCORE_MIN     = 0.55   # Minimum Moderate conviction to enter a new positio
 _MIN_HOLD_DAYS     = 30     # Don't rotate out within 30 days (except hard stop)
 _MAX_POSITIONS     = 20
 
+
+# Compact sector map for concentration display (covers our universe)
+_TICKER_SECTOR: dict[str, str] = {
+    "AAPL": "Tech", "MSFT": "Tech", "NVDA": "Semis", "GOOGL": "Tech",
+    "META": "Tech", "AMZN": "Tech", "TSLA": "EV/Auto", "AVGO": "Semis",
+    "CRM": "Tech", "AMD": "Semis", "QCOM": "Semis", "MU": "Semis",
+    "LRCX": "Semi Equip", "AMAT": "Semi Equip", "ARM": "Semis", "MRVL": "Semis",
+    "PLTR": "AI/Defense", "ORCL": "Tech", "IBM": "Tech", "DELL": "Tech",
+    "DDOG": "Tech", "NET": "Cyber", "ZS": "Cyber",
+    "JPM": "Financials", "BAC": "Financials", "GS": "Financials",
+    "V": "Financials", "MA": "Financials", "SCHW": "Financials",
+    "LLY": "Healthcare", "UNH": "Healthcare", "JNJ": "Healthcare", "ABBV": "Healthcare",
+    "COST": "Consumer", "HD": "Consumer", "WMT": "Consumer",
+    "NFLX": "Media", "PG": "Staples", "KO": "Staples",
+    "XOM": "Energy", "CVX": "Energy",
+    "LMT": "Defense", "NOC": "Defense", "RTX": "Defense",
+    "GE": "Industrials", "CAT": "Industrials", "ETN": "Industrials",
+    "APP": "Tech", "HOOD": "Financials", "SOFI": "Financials",
+    "WDAY": "Enterprise SaaS", "HUBS": "Enterprise SaaS", "SNOW": "Enterprise SaaS",
+    "SMCI": "Semis", "FSLR": "Clean Energy", "ENPH": "Clean Energy",
+    "CELH": "Consumer", "CAVA": "Consumer", "RBLX": "Media",
+}
 
 # ---------------------------------------------------------------------------
 # Scoring helpers
@@ -114,10 +157,71 @@ def _signal_emoji(label: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Model signal distribution — shows the model is being selective
+# ---------------------------------------------------------------------------
+
+def _model_stats_block(all_results: list[dict]) -> list[dict]:
+    buys   = [r for r in all_results if r["signal"]["label"] == "BUY"]
+    avoids = [r for r in all_results if r["signal"]["label"] == "AVOID"]
+    total  = len(all_results)
+    buy_pct = round(len(buys) / total * 100) if total else 0
+
+    # Top sectors among BUY signals
+    sector_counts: dict[str, int] = {}
+    for r in buys:
+        s = _TICKER_SECTOR.get(r["ticker"], "Other")
+        sector_counts[s] = sector_counts.get(s, 0) + 1
+    top_sectors = sorted(sector_counts, key=sector_counts.get, reverse=True)[:3]
+
+    line = (
+        f"*Model today:*  {len(buys)} BUY · {len(all_results) - len(buys) - len(avoids)} WATCH "
+        f"· {len(avoids)} AVOID  across {total} tickers  ({buy_pct}% conviction rate)"
+    )
+    if top_sectors:
+        line += f"\nStrength concentrated in: {', '.join(top_sectors)}"
+
+    return [{"type": "section", "text": {"type": "mrkdwn", "text": line}}]
+
+
+# ---------------------------------------------------------------------------
+# Upcoming earnings for held positions
+# ---------------------------------------------------------------------------
+
+def _upcoming_earnings_block(held_tickers: list[str], window_days: int = 14) -> list[dict]:
+    """Returns a block if any held position has earnings within window_days."""
+    near: list[tuple[str, int]] = []
+    for ticker in held_tickers:
+        try:
+            dte = days_to_earnings(ticker)
+            if dte is not None and 0 <= dte <= window_days:
+                near.append((ticker, dte))
+        except Exception:
+            continue
+
+    if not near:
+        return []
+
+    near.sort(key=lambda x: x[1])
+    lines = ["*Earnings Watch — Action Required Before Report*"]
+    for ticker, dte in near:
+        day_label = "Tomorrow" if dte == 1 else ("Today" if dte == 0 else f"In {dte} days")
+        lines.append(f"• *{ticker}* — earnings {day_label}. Decide: hold, trim, or exit before report.")
+
+    return [
+        {"type": "divider"},
+        {"type": "section", "text": {"type": "mrkdwn", "text": "\n".join(lines)}},
+    ]
+
+
+# ---------------------------------------------------------------------------
 # Caution alerts
 # ---------------------------------------------------------------------------
 
-def _caution_alerts(portfolio_value: dict, regime: dict) -> list[str]:
+def _caution_alerts(
+    portfolio_value: dict,
+    regime: dict,
+    score_map: dict[str, dict] | None = None,
+) -> list[str]:
     alerts = []
     vix = regime.get("vix", 0.0)
     if vix >= 30:
@@ -131,15 +235,23 @@ def _caution_alerts(portfolio_value: dict, regime: dict) -> list[str]:
             f"Volatility elevated above normal. Don't add new risk — hold steady."
         )
     for p in portfolio_value.get("positions", []):
+        ticker = p["ticker"]
+        score_str = ""
+        if score_map and ticker in score_map:
+            s = score_map[ticker]["signal"]["composite_score"]
+            conviction = _conviction(s)
+            score_str = f"  Model score: {s:.2f} ({conviction})."
+
+        gap = p["pnl_pct"] - (-15.0)  # how many pct points until hard stop
         if p["pnl_pct"] <= -15:
             alerts.append(
-                f"*{p['ticker']} down {p['pnl_pct']:.1f}%*\n"
-                f"Hit our -15% exit threshold. Flag for rebalance."
+                f"*{ticker} HARD STOP HIT: {p['pnl_pct']:.1f}%*\n"
+                f"Exit threshold reached.{score_str} Flag for rebalance — do not hold further."
             )
         elif p["pnl_pct"] <= -10:
             alerts.append(
-                f"*{p['ticker']} down {p['pnl_pct']:.1f}%*\n"
-                f"Approaching -15% exit threshold. Watch closely."
+                f"*{ticker} down {p['pnl_pct']:.1f}%* — {gap:.1f} pts from −15% hard stop.\n"
+                f"{score_str} Consider reviewing whether to exit early or wait for hard stop."
             )
     return alerts
 
@@ -245,7 +357,26 @@ def _real_portfolio_blocks(real_positions: list[dict]) -> list[dict]:
 # Paper portfolio Message 2 (improved readability)
 # ---------------------------------------------------------------------------
 
-def _paper_portfolio_blocks(portfolio_value: dict, now: datetime, is_monthly: bool = False) -> list[dict]:
+def _sector_concentration(positions: list[dict]) -> str:
+    """Returns a single line showing sector % concentration for held positions."""
+    counts: dict[str, int] = {}
+    total = len(positions)
+    for p in positions:
+        s = _TICKER_SECTOR.get(p["ticker"], "Other")
+        counts[s] = counts.get(s, 0) + 1
+    if not total:
+        return ""
+    sorted_sectors = sorted(counts, key=counts.get, reverse=True)
+    parts = [f"{s} {round(counts[s]/total*100)}%" for s in sorted_sectors[:5]]
+    return "Concentration: " + " · ".join(parts)
+
+
+def _paper_portfolio_blocks(
+    portfolio_value: dict,
+    now: datetime,
+    is_monthly: bool = False,
+    score_map: dict[str, dict] | None = None,
+) -> list[dict]:
     pv = portfolio_value
     sign = "+" if pv["total_pnl_pct"] >= 0 else ""
     alpha_sign = "+" if pv["alpha_pct"] >= 0 else ""
@@ -259,18 +390,34 @@ def _paper_portfolio_blocks(portfolio_value: dict, now: datetime, is_monthly: bo
     ]
 
     positions = pv.get("positions", [])
+    today = now.date()
+
+    def pos_line(p: dict) -> str:
+        sign_p = "+" if p["pnl_pct"] >= 0 else ""
+        # Days held
+        try:
+            entry = date_type.fromisoformat(p.get("entry_date", str(today)))
+            days_held = (today - entry).days
+        except Exception:
+            days_held = 0
+        days_str = f"{days_held}d"
+        # Current model score
+        score_str = ""
+        if score_map and p["ticker"] in score_map:
+            s = score_map[p["ticker"]]["signal"]["composite_score"]
+            conv = _conviction(s)
+            score_str = f"  {s:.2f} ({conv})"
+        # Near-stop flag
+        flag = " *NEAR STOP*" if p["pnl_pct"] <= -10 else ""
+        return (
+            f"*{p['ticker']}*  {sign_p}{p['pnl_pct']:.1f}%"
+            f"  ({sign_p}${p['pnl']:.0f})"
+            f"{score_str}  {days_str}{flag}"
+        )
 
     # Positions: grouped into winners vs losers for readability
     winners = [p for p in positions if p["pnl_pct"] >= 0]
     losers  = [p for p in positions if p["pnl_pct"] < 0]
-
-    def pos_line(p: dict) -> str:
-        sign_p = "+" if p["pnl_pct"] >= 0 else ""
-        return (
-            f"*{p['ticker']}*  {sign_p}{p['pnl_pct']:.1f}%"
-            f"  ({sign_p}${p['pnl']:.0f})"
-            f"  ${p['current_price']:.0f}"
-        )
 
     pos_lines = []
     if winners:
@@ -281,6 +428,11 @@ def _paper_portfolio_blocks(portfolio_value: dict, now: datetime, is_monthly: bo
             pos_lines.append("")
         pos_lines.append("*Losers*")
         pos_lines += [pos_line(p) for p in losers]
+
+    # Sector concentration
+    concentration = _sector_concentration(positions)
+    if concentration:
+        pos_lines.append(f"\n_{concentration}_")
 
     blocks = [
         {
@@ -313,10 +465,56 @@ def _paper_portfolio_blocks(portfolio_value: dict, now: datetime, is_monthly: bo
 
 
 # ---------------------------------------------------------------------------
+# Outcome logging helpers
+# ---------------------------------------------------------------------------
+
+def _log_new_entries(
+    bought_tickers: list[str],
+    score_map: dict[str, dict],
+    entry_date: str,
+    vix: float,
+    regime: str,
+) -> None:
+    """Log signal_outcomes entries for newly purchased positions."""
+    already_tracked = get_open_outcome_tickers()
+    for ticker in bought_tickers:
+        if ticker in already_tracked:
+            continue
+        result = score_map.get(ticker)
+        if not result:
+            continue
+        sig = result["signal"]
+        log_trade_entry(
+            ticker=ticker,
+            entry_date=entry_date,
+            entry_price=result["current_price"],
+            layer_scores=sig.get("layer_scores", {}),
+            composite_score=sig["composite_score"],
+            vix=vix,
+            regime=regime,
+            sector=_TICKER_SECTOR.get(ticker, "Other"),
+        )
+
+
+def _log_exits(
+    sold_positions: list[dict],
+    exit_date: str,
+) -> None:
+    """Log exit outcomes for sold positions."""
+    for pos in sold_positions:
+        log_trade_exit(
+            ticker=pos["ticker"],
+            exit_date=exit_date,
+            exit_price=pos["price"],
+            exit_reason=pos.get("reason", "rebalance"),
+        )
+
+
+# ---------------------------------------------------------------------------
 # Monthly rebalance engine
 # ---------------------------------------------------------------------------
 
-def _run_monthly_rebalance(all_results: list[dict], now: datetime) -> dict:
+def _run_monthly_rebalance(all_results: list[dict], now: datetime, score_map: dict[str, dict] | None = None) -> dict:
     """
     Score current paper positions against the full universe and rotate.
 
@@ -332,13 +530,13 @@ def _run_monthly_rebalance(all_results: list[dict], now: datetime) -> dict:
       - If no qualifying buys exist, hold cash until next rebalance
     """
     from api.paper_portfolio import get_positions, rebalance as execute_rebalance
-    from datetime import date as date_type
 
     positions = get_positions()
     if not positions:
         return {"sells": [], "buys": [], "held": []}
 
-    score_map = {r["ticker"]: r for r in all_results}
+    if score_map is None:
+        score_map = {r["ticker"]: r for r in all_results}
     ranked_all = sorted(
         all_results,
         key=lambda r: r["signal"]["composite_score"],
@@ -428,6 +626,18 @@ def _run_monthly_rebalance(all_results: list[dict], now: datetime) -> dict:
 
     if sells or buys:
         execute_rebalance(sells, buys)
+        live_regime = get_market_regime()
+        vix = float(live_regime.get("vix", 0.0))
+        regime_name = live_regime.get("regime", "unknown")
+        trade_date = today.isoformat()
+        _log_exits(sells, trade_date)
+        _log_new_entries(
+            [b["ticker"] for b in buys],
+            score_map,
+            trade_date,
+            vix,
+            regime_name,
+        )
         logger.info("Monthly rebalance complete: sold %d, bought %d", len(sells), len(buys))
 
     return {"sells": sells, "buys": buys, "held": sorted(kept)}
@@ -556,6 +766,9 @@ def send_daily_briefing(
     sheet_positions = fetch_google_sheet_portfolio()
     real_positions  = score_real_portfolio(sheet_positions) if sheet_positions else []
 
+    # Build score_map early — needed by logging + caution alerts
+    score_map: dict[str, dict] = {r["ticker"]: r for r in all_results}
+
     # Auto-initialize paper portfolio on first run using today's top 20 picks
     if not is_initialized():
         top20 = sorted(
@@ -574,12 +787,20 @@ def send_daily_briefing(
         ]
         if buys:
             from api.paper_portfolio import initialize_portfolio
-            initialize_portfolio(buys)
+            trade_date = now.date().isoformat()
+            initialize_portfolio(buys, trade_date=trade_date)
+            _log_new_entries(
+                [b["ticker"] for b in buys],
+                score_map,
+                trade_date,
+                vix=float(regime.get("vix", 0.0)),
+                regime=regime.get("regime", "unknown"),
+            )
             logger.info("Paper portfolio auto-initialized with %d positions.", len(buys))
 
     # Paper portfolio caution check
     paper_value = get_portfolio_value() if is_initialized() else {"positions": []}
-    alerts = _caution_alerts(paper_value, regime)
+    alerts = _caution_alerts(paper_value, regime, score_map)
 
     # Index summary (compact for mobile header)
     index_parts = []
@@ -609,6 +830,10 @@ def send_daily_briefing(
                 "text": f"*{index_line}*  ·  {regime_label} Volatility",
             },
         },
+        {"type": "divider"},
+    ]
+    msg1_blocks += _model_stats_block(all_results)
+    msg1_blocks += [
         {"type": "divider"},
         {
             "type": "section",
@@ -662,7 +887,7 @@ def send_daily_briefing(
             "type": "context",
             "elements": [
                 {"type": "mrkdwn", "text": rebalance_str},
-                {"type": "mrkdwn", "text": "BUY >0.65  ·  WATCH 0.40-0.65  ·  AVOID <0.40  ·  Score = model conviction (not coin flip)"},
+                {"type": "mrkdwn", "text": "BUY >0.58  ·  WATCH 0.42-0.58  ·  AVOID <0.42  ·  Score = model conviction (not coin flip)"},
             ],
         }
     )
@@ -673,7 +898,9 @@ def send_daily_briefing(
 
     # ---- Message 2: paper portfolio ----
     if is_initialized():
-        msg2_blocks = _paper_portfolio_blocks(paper_value, now, is_monthly=False)
+        msg2_blocks = _paper_portfolio_blocks(paper_value, now, is_monthly=False, score_map=score_map)
+        held_tickers = [p["ticker"] for p in paper_value.get("positions", [])]
+        msg2_blocks += _upcoming_earnings_block(held_tickers)
         _post_to_slack({"text": f"Paper Portfolio — {date_str}", "blocks": msg2_blocks})
         logger.info("Message 2 sent.")
 
@@ -697,7 +924,8 @@ def send_monthly_briefing(
         return
 
     # Run automated rebalance using today's model scores
-    rebalance_result = _run_monthly_rebalance(all_results, now)
+    monthly_score_map = {r["ticker"]: r for r in all_results}
+    rebalance_result = _run_monthly_rebalance(all_results, now, score_map=monthly_score_map)
 
     # Message 3: rebalance summary
     rebalance_blks = _rebalance_blocks(rebalance_result, now)
@@ -707,9 +935,21 @@ def send_monthly_briefing(
     })
     logger.info("Monthly rebalance message sent.")
 
+    # Message 3b: quarterly model report card (Jan/Apr/Jul/Oct only)
+    from api.quarterly_review import run_quarterly_review, build_quarterly_slack_blocks, is_quarter_start
+    if is_quarter_start(now):
+        qr = run_quarterly_review(min_closed=15)
+        qr_blocks = build_quarterly_slack_blocks(qr, now)
+        _post_to_slack({
+            "text": f"Model Report Card — Q{((now.month-1)//3)+1} {now.year}",
+            "blocks": qr_blocks,
+        })
+        logger.info("Quarterly regression report sent.")
+
     # Message 4: updated portfolio after rebalance
     paper_value = get_portfolio_value()
-    blocks = _paper_portfolio_blocks(paper_value, now, is_monthly=True)
+    rebalance_score_map = {r["ticker"]: r for r in all_results}
+    blocks = _paper_portfolio_blocks(paper_value, now, is_monthly=True, score_map=rebalance_score_map)
     _post_to_slack({
         "text": f"Monthly Portfolio Summary — {now.strftime('%B %Y')}",
         "blocks": blocks,

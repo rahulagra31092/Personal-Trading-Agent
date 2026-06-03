@@ -35,13 +35,46 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     "technical": 0.20,
     "momentum": 0.25,
     "quality": 0.15,
-    "smart_money": 0.15,
+    "congress": 0.08,
+    "trump_policy": 0.07,
     "news_reaction": 0.10,
     "earnings": 0.15,
 }
 assert abs(sum(SIGNAL_WEIGHTS.values()) - 1.0) < 1e-9, (
     f"SIGNAL_WEIGHTS must sum to 1.0, got {sum(SIGNAL_WEIGHTS.values())}"
 )
+
+# Regime-adaptive weight overrides — applied by signals.py based on live VIX.
+# VIX thresholds (from quant/regime.py _THRESHOLDS):
+#   low_vol:  VIX < 15   — calm bull market, momentum rewarded
+#   normal:   VIX 15-20  — baseline
+#   elevated: VIX 20-25  — mild concern; quality/earnings start to matter more
+#   high:     VIX 25-30  — meaningful stress; momentum unreliable
+#   crisis:   VIX >= 30  — capital preservation; only quality + earnings predict
+REGIME_WEIGHTS: dict[str, dict[str, float]] = {
+    "low_vol": {          # VIX < 15 — bull market, momentum rewarded
+        "technical": 0.18, "momentum": 0.32, "quality": 0.12,
+        "congress": 0.08, "trump_policy": 0.07, "news_reaction": 0.08, "earnings": 0.15,
+    },
+    "normal": SIGNAL_WEIGHTS,  # VIX 15-20 — baseline weights
+    "elevated": {         # VIX 20-25 — momentum falters, quality/earnings take over
+        "technical": 0.15, "momentum": 0.18, "quality": 0.22,
+        "congress": 0.08, "trump_policy": 0.07, "news_reaction": 0.10, "earnings": 0.20,
+    },
+    "high": {             # VIX 25-30 — preserve capital; quality + earnings dominate
+        "technical": 0.10, "momentum": 0.10, "quality": 0.28,
+        "congress": 0.07, "trump_policy": 0.05, "news_reaction": 0.10, "earnings": 0.30,
+    },
+    "crisis": {           # VIX >= 30 — extreme stress; cash is valid
+        "technical": 0.08, "momentum": 0.08, "quality": 0.32,
+        "congress": 0.05, "trump_policy": 0.05, "news_reaction": 0.10, "earnings": 0.32,
+    },
+}
+for _regime, _w in REGIME_WEIGHTS.items():
+    if _w is not SIGNAL_WEIGHTS:
+        assert abs(sum(_w.values()) - 1.0) < 1e-9, (
+            f"REGIME_WEIGHTS[{_regime!r}] must sum to 1.0"
+        )
 
 PHASE: int = 1
 PHASE2_LIVE_CAPITAL: float = 2500.0

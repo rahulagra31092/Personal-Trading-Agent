@@ -84,3 +84,40 @@ def test_cache_hit_skips_download():
         r = get_market_regime()
     assert r["regime"] == "elevated"
     mock_dl.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Exact boundary tests — VIX at threshold values
+# ---------------------------------------------------------------------------
+
+def test_vix_exactly_15_is_normal_not_low_vol():
+    # _THRESHOLDS uses strict <, so VIX=15 falls into normal (15 <= VIX < 20)
+    with patch("quant.regime.get_cache", return_value=None), \
+         patch("quant.regime.set_cache"), \
+         patch("quant.regime.yf.download", return_value=_vix_hist(15.0)):
+        r = get_market_regime()
+    assert r["regime"] == "normal"
+
+
+def test_vix_exactly_20_is_elevated_not_normal():
+    with patch("quant.regime.get_cache", return_value=None), \
+         patch("quant.regime.set_cache"), \
+         patch("quant.regime.yf.download", return_value=_vix_hist(20.0)):
+        r = get_market_regime()
+    assert r["regime"] == "elevated"
+
+
+def test_vix_exactly_25_is_high_not_elevated():
+    with patch("quant.regime.get_cache", return_value=None), \
+         patch("quant.regime.set_cache"), \
+         patch("quant.regime.yf.download", return_value=_vix_hist(25.0)):
+        r = get_market_regime()
+    assert r["regime"] == "high"
+
+
+def test_vix_exactly_30_is_crisis_not_high():
+    with patch("quant.regime.get_cache", return_value=None), \
+         patch("quant.regime.set_cache"), \
+         patch("quant.regime.yf.download", return_value=_vix_hist(30.0)):
+        r = get_market_regime()
+    assert r["regime"] == "crisis"

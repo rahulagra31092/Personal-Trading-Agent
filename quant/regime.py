@@ -5,6 +5,7 @@ import yfinance as yf
 import pandas as pd
 
 from data.cache import get_cache, set_cache
+import config
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,11 @@ def _classify(vix: float) -> dict:
             return {"regime": regime, "vix": round(vix, 2),
                     "position_factor": factor, "max_positions": max_pos}
     return {**_FALLBACK, "vix": round(vix, 2)}
+
+
+def get_regime_weights(regime_name: str) -> dict[str, float]:
+    """Return the signal weight dict for the given regime name."""
+    return config.REGIME_WEIGHTS.get(regime_name, config.SIGNAL_WEIGHTS)
 
 
 def get_market_regime(as_of_date: Optional[str] = None) -> dict:

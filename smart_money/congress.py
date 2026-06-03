@@ -1,3 +1,4 @@
+import re
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -5,7 +6,6 @@ import requests
 import yfinance as yf
 
 from data.cache import get_cache, set_cache
-from smart_money.trump_scorer import compute_trump_modifier
 import config
 
 logger = logging.getLogger(__name__)
@@ -40,6 +40,49 @@ def get_congress_trades(ticker: str) -> list[dict]:
     return trades
 
 
+def _recency_weight(trade_date: datetime, now: datetime) -> float:
+    """Recent trades carry more signal: 0-30 days = 1.0, 30-90 = 0.7, 90+ = 0.3."""
+    days_ago = (now - trade_date).days
+    if days_ago <= 30:
+        return 1.0
+    if days_ago <= 90:
+        return 0.7
+    return 0.3
+
+
+def _parse_trade_size(range_str: str) -> float:
+    """
+    Map Quiver's dollar range field to a size weight (1–30).
+    Larger trades from Congress members signal stronger conviction.
+
+    Quiver ranges: "$1,001-$15,000" | "$15,001-$50,000" | "$50,001-$100,000" |
+                   "$100,001-$250,000" | "$250,001-$500,000" | "$500,001-$1,000,000" |
+                   "Over $1,000,000"
+    Uses strict upper-bound comparisons (+1) so each range maps to its own bucket.
+    """
+    if not range_str:
+        return 1.0
+    if re.search(r"\bover\b", range_str, re.IGNORECASE):
+        return 30.0
+    nums = [int(n.replace(",", "")) for n in re.findall(r"[\d,]+", range_str)]
+    if not nums:
+        return 1.0
+    upper = max(nums)
+    if upper >= 1_000_001:
+        return 30.0
+    if upper >= 500_001:
+        return 15.0
+    if upper >= 250_001:
+        return 8.0
+    if upper >= 100_001:
+        return 5.0
+    if upper >= 50_001:
+        return 3.0
+    if upper >= 15_001:
+        return 2.0
+    return 1.0
+
+
 def _institutional_adjustment(ticker: str) -> float:
     """Return discrete adjustment in {-0.05, 0.0, +0.05}:
     +0.05 if institutional ownership >= 70%, -0.05 if <= 30%, else 0.0.
@@ -55,11 +98,9 @@ def _institutional_adjustment(ticker: str) -> float:
             return 0.0
 
         pct: float
-        # Try newer named-index shape first (floats 0.0-1.0)
         if hasattr(holders.index, '__contains__') and "institutionsPercentHeld" in holders.index:
             pct = float(holders.loc["institutionsPercentHeld"].iloc[0])
         else:
-            # Legacy shape: row 1, col 0 is a percent string like "75.00%"
             raw = holders.iloc[1, 0]
             pct = float(str(raw).replace("%", "").strip()) / 100.0
 
@@ -82,13 +123,20 @@ def _institutional_adjustment(ticker: str) -> float:
 
 
 def compute_congress_score(ticker: str, lookback_days: int = 180) -> float:
+    """
+    Congress trading signal: buy/sell ratio weighted by recency, trade size, and member consensus.
+    Score [0.1, 0.9] — 0.5 = neutral, >0.5 = net buying, <0.5 = net selling.
+    """
     trades = get_congress_trades(ticker)
     if not trades:
         return 0.5
 
-    cutoff = datetime.now(timezone.utc) - timedelta(days=lookback_days)
-    buys = 0
-    sells = 0
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=lookback_days)
+    buy_weight = 0.0
+    sell_weight = 0.0
+    members_buy: set[str] = set()
+    members_sell: set[str] = set()
 
     for trade in trades:
         try:
@@ -100,26 +148,36 @@ def compute_congress_score(ticker: str, lookback_days: int = 180) -> float:
                 trade_date = trade_date.replace(tzinfo=timezone.utc)
             if trade_date < cutoff:
                 continue
+
             txn = (trade.get("Transaction") or "").lower()
-            if "purchase" in txn or "buy" in txn:
-                buys += 1
-            elif "sale" in txn or "sell" in txn:
-                sells += 1
+            is_buy = "purchase" in txn or "buy" in txn
+            is_sell = "sale" in txn or "sell" in txn
+            if not is_buy and not is_sell:
+                continue
+
+            recency = _recency_weight(trade_date, now)
+            size = _parse_trade_size(trade.get("Range") or trade.get("Amount") or "")
+            member = trade.get("Representative") or trade.get("Senator") or ""
+
+            w = recency * size
+            if is_buy:
+                buy_weight += w
+                members_buy.add(member)
+            else:
+                sell_weight += w
+                members_sell.add(member)
         except Exception:
             continue
 
-    total = buys + sells
-    if total == 0:
+    total_weight = buy_weight + sell_weight
+    if total_weight == 0:
         return 0.5
 
-    # Base signal: 0.3 = all sells, 0.7 = all buys
-    base_score = 0.3 + (buys / total) * 0.4
+    buy_ratio = buy_weight / total_weight
+    dominant_distinct = len(members_buy) if buy_ratio >= 0.5 else len(members_sell)
+    # Consensus bonus: each additional member beyond the first adds 3% strength (max +15%)
+    consensus_factor = 1.0 + min(0.15, (dominant_distinct - 1) * 0.03)
+
+    raw = 0.5 + (buy_ratio - 0.5) * 0.70 * consensus_factor
     adjustment = _institutional_adjustment(ticker)
-
-    # Blend in White House policy direction: congress 60%, Trump signal 40%
-    # Normalise trump modifier [-0.15, +0.15] -> component centred on 0.5
-    trump_component = 0.5 + compute_trump_modifier(ticker)
-    blended = base_score * 0.60 + trump_component * 0.40
-
-    score = round(max(0.20, min(0.80, blended + adjustment)), 4)
-    return score
+    return round(max(0.1, min(0.9, raw + adjustment)), 4)

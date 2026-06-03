@@ -19,7 +19,8 @@ def get_earnings_calendar(ticker: str) -> dict:
     result: dict = {
         "next_earnings_date": None,
         "eps_estimate": info.get("forwardEps"),
-        "eps_beat_rate": _calculate_beat_rate(t),
+        "earnings_quarterly_growth": info.get("earningsQuarterlyGrowth"),
+        **_calculate_eps_stats(t),
     }
 
     try:
@@ -55,13 +56,22 @@ def get_eps_beat_rate(ticker: str) -> float | None:
     return cal.get("eps_beat_rate")
 
 
-def _calculate_beat_rate(ticker_obj: yf.Ticker) -> float | None:
+def _calculate_eps_stats(ticker_obj: yf.Ticker) -> dict:
+    """Return eps_beat_rate, avg_surprise_pct, last_beat from earnings_history."""
+    base = {"eps_beat_rate": None, "avg_surprise_pct": None, "last_beat": None}
     try:
         history = ticker_obj.earnings_history
         if history is None or history.empty:
-            return None
-        total = len(history)
-        beats = int((history["surprisePercent"] > 0).sum())
-        return round(beats / total, 2) if total > 0 else None
+            return base
+        pcts = history["surprisePercent"].dropna()
+        if pcts.empty:
+            return base
+        total = len(pcts)
+        beats = int((pcts > 0).sum())
+        return {
+            "eps_beat_rate": round(beats / total, 2),
+            "avg_surprise_pct": round(float(pcts.mean()), 4),
+            "last_beat": bool(pcts.iloc[0] > 0),
+        }
     except Exception:
-        return None
+        return base

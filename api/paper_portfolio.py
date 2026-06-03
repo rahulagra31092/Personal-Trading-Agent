@@ -47,6 +47,28 @@ def init_paper_db() -> None:
                 value       REAL NOT NULL,
                 note        TEXT DEFAULT ''
             );
+            CREATE TABLE IF NOT EXISTS signal_outcomes (
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticker              TEXT NOT NULL,
+                entry_date          TEXT NOT NULL,
+                exit_date           TEXT,
+                entry_price         REAL NOT NULL,
+                exit_price          REAL,
+                realized_return_pct REAL,
+                days_held           INTEGER,
+                exit_reason         TEXT,
+                score_technical     REAL,
+                score_momentum      REAL,
+                score_quality       REAL,
+                score_congress      REAL,
+                score_trump_policy  REAL,
+                score_news          REAL,
+                score_earnings      REAL,
+                score_composite     REAL,
+                vix_at_entry        REAL,
+                regime_at_entry     TEXT,
+                sector              TEXT
+            );
         """)
 
 
@@ -55,6 +77,110 @@ def _conn() -> sqlite3.Connection:
     con = sqlite3.connect(PAPER_DB_PATH)
     con.row_factory = sqlite3.Row
     return con
+
+
+# ---------------------------------------------------------------------------
+# Outcome tracking — feeds the quarterly regression
+# ---------------------------------------------------------------------------
+
+def log_trade_entry(
+    ticker: str,
+    entry_date: str,
+    entry_price: float,
+    layer_scores: dict,
+    composite_score: float,
+    vix: float = 0.0,
+    regime: str = "unknown",
+    sector: str = "Other",
+) -> None:
+    """Record a new paper position entry with all 7 factor scores."""
+    init_paper_db()
+    ls = layer_scores or {}
+    try:
+        with _conn() as con:
+            con.execute(
+                """INSERT INTO signal_outcomes
+                   (ticker, entry_date, entry_price,
+                    score_technical, score_momentum, score_quality,
+                    score_congress, score_trump_policy, score_news, score_earnings,
+                    score_composite, vix_at_entry, regime_at_entry, sector)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    ticker.upper(), entry_date, entry_price,
+                    ls.get("technical"), ls.get("momentum"), ls.get("quality"),
+                    ls.get("congress"), ls.get("trump_policy"), ls.get("news_reaction"),
+                    ls.get("earnings"), composite_score,
+                    vix, regime, sector,
+                ),
+            )
+    except Exception as exc:
+        logger.warning("log_trade_entry failed for %s: %s", ticker, exc)
+
+
+def log_trade_exit(
+    ticker: str,
+    exit_date: str,
+    exit_price: float,
+    exit_reason: str,
+) -> None:
+    """Close the most recent open outcome record for ticker, computing realized return."""
+    init_paper_db()
+    try:
+        with _conn() as con:
+            row = con.execute(
+                """SELECT id, entry_price, entry_date FROM signal_outcomes
+                   WHERE ticker = ? AND exit_date IS NULL
+                   ORDER BY entry_date DESC LIMIT 1""",
+                (ticker.upper(),),
+            ).fetchone()
+            if not row:
+                return
+            entry_price = row["entry_price"]
+            entry_date = row["entry_date"]
+            realized = round((exit_price / entry_price - 1) * 100, 4) if entry_price else 0.0
+            try:
+                days = (date.fromisoformat(exit_date) - date.fromisoformat(entry_date)).days
+            except Exception:
+                days = None
+            con.execute(
+                """UPDATE signal_outcomes
+                   SET exit_date=?, exit_price=?, realized_return_pct=?,
+                       days_held=?, exit_reason=?
+                   WHERE id=?""",
+                (exit_date, exit_price, realized, days, exit_reason, row["id"]),
+            )
+    except Exception as exc:
+        logger.warning("log_trade_exit failed for %s: %s", ticker, exc)
+
+
+def get_closed_outcomes(min_closed: int = 0) -> list[dict]:
+    """Return all closed positions for regression. Requires exit_date IS NOT NULL."""
+    init_paper_db()
+    try:
+        with _conn() as con:
+            rows = con.execute(
+                """SELECT * FROM signal_outcomes
+                   WHERE exit_date IS NOT NULL AND realized_return_pct IS NOT NULL
+                   ORDER BY exit_date DESC"""
+            ).fetchall()
+        result = [dict(r) for r in rows]
+        return result if len(result) >= min_closed else []
+    except Exception as exc:
+        logger.warning("get_closed_outcomes failed: %s", exc)
+        return []
+
+
+def get_open_outcome_tickers() -> set[str]:
+    """Return tickers that have an open (not yet closed) outcome record."""
+    init_paper_db()
+    try:
+        with _conn() as con:
+            rows = con.execute(
+                "SELECT ticker FROM signal_outcomes WHERE exit_date IS NULL"
+            ).fetchall()
+        return {r["ticker"] for r in rows}
+    except Exception:
+        return set()
 
 
 # ---------------------------------------------------------------------------

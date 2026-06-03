@@ -22,5 +22,4 @@ def compute_short_position_size(
     max_pct: float = 0.01,
 ) -> float:
     """Short position size in dollars, smaller than longs to cap upside risk."""
-    return round(max(total_capital * short_pct, min(total_capital * max_pct,
-                                                     total_capital * short_pct)))
+    return round(min(total_capital * max_pct, total_capital * short_pct))
