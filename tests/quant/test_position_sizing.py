@@ -59,3 +59,64 @@ def test_short_position_size_smaller_than_long():
 def test_short_position_size_bounded():
     short_size = compute_short_position_size(CAPITAL)
     assert CAPITAL * 0.005 <= short_size <= CAPITAL * 0.01
+
+
+from quant.position_sizing import compute_conviction_position_size
+
+CAPITAL_CONVICTION = 10_000.0
+BASE = 500.0
+
+
+def test_low_conviction_reduces_size():
+    size = compute_conviction_position_size(BASE, composite_score=0.60, total_capital=CAPITAL_CONVICTION)
+    assert size == round(BASE * 0.65)
+
+
+def test_medium_conviction_uses_base_size():
+    size = compute_conviction_position_size(BASE, composite_score=0.70, total_capital=CAPITAL_CONVICTION)
+    assert size == BASE
+
+
+def test_high_conviction_increases_size():
+    size = compute_conviction_position_size(BASE, composite_score=0.80, total_capital=CAPITAL_CONVICTION)
+    assert size == round(BASE * 1.40)
+
+
+def test_regime_factor_scales_size():
+    full = compute_conviction_position_size(BASE, composite_score=0.70, regime_factor=1.0, total_capital=CAPITAL_CONVICTION)
+    crisis = compute_conviction_position_size(BASE, composite_score=0.70, regime_factor=0.50, total_capital=CAPITAL_CONVICTION)
+    assert crisis < full
+    assert abs(crisis / full - 0.50) < 0.05
+
+
+def test_low_vol_scalar_increases_size():
+    med = compute_conviction_position_size(BASE, composite_score=0.70, garch_vol_scalar=0.5, total_capital=CAPITAL_CONVICTION)
+    low = compute_conviction_position_size(BASE, composite_score=0.70, garch_vol_scalar=0.8, total_capital=CAPITAL_CONVICTION)
+    assert low > med
+
+
+def test_high_vol_scalar_decreases_size():
+    med = compute_conviction_position_size(BASE, composite_score=0.70, garch_vol_scalar=0.5, total_capital=CAPITAL_CONVICTION)
+    high = compute_conviction_position_size(BASE, composite_score=0.70, garch_vol_scalar=0.2, total_capital=CAPITAL_CONVICTION)
+    assert high < med
+
+
+def test_hard_cap_at_8pct_of_capital():
+    size = compute_conviction_position_size(
+        base_size=2000.0, composite_score=0.90,
+        regime_factor=1.0, garch_vol_scalar=0.8,
+        total_capital=CAPITAL_CONVICTION, max_capital_pct=0.08,
+    )
+    assert size <= CAPITAL_CONVICTION * 0.08
+
+
+def test_conviction_boundary_exactly_065():
+    # Exactly at 0.65 → medium conviction (>=0.65 tier)
+    size = compute_conviction_position_size(BASE, composite_score=0.65, total_capital=CAPITAL_CONVICTION)
+    assert size == BASE  # 1.0× multiplier
+
+
+def test_conviction_boundary_exactly_075():
+    # Exactly at 0.75 → high conviction (>=0.75 tier)
+    size = compute_conviction_position_size(BASE, composite_score=0.75, total_capital=CAPITAL_CONVICTION)
+    assert size == round(BASE * 1.40)
