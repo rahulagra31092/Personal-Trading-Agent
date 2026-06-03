@@ -23,6 +23,11 @@ def compute_signal(
         4,
     )
 
+    # Interaction gate: quality < 0.35 with high composite = momentum trap.
+    # Cap below BUY threshold to force WATCH.
+    if quality_score < 0.35 and composite > 0.57:
+        composite = 0.57
+
     label = "BUY" if composite > 0.58 else ("AVOID" if composite < 0.42 else "WATCH")
 
     return {

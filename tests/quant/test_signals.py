@@ -137,3 +137,48 @@ def test_composite_score_bounded_all_ones():
                             congress_score=1.0, trump_policy_score=1.0,
                             news_score=1.0, earnings_score=1.0)
     assert result["composite_score"] == pytest.approx(1.0, abs=0.0001)
+
+
+# ---------------------------------------------------------------------------
+# Interaction gate: low quality blocks BUY regardless of other scores
+# ---------------------------------------------------------------------------
+
+def test_low_quality_gate_forces_watch():
+    # quality=0.30 < 0.35 gate threshold; all others very high → would be BUY without gate
+    result = compute_signal(
+        technical_score=0.95, momentum_score=0.95, quality_score=0.30,
+        congress_score=0.90, trump_policy_score=0.90,
+        news_score=0.90, earnings_score=0.90,
+    )
+    assert result["label"] == "WATCH"
+    assert result["composite_score"] <= 0.57
+
+
+def test_quality_above_gate_threshold_allows_buy():
+    # quality=0.36 >= 0.35; gate does not fire
+    result = compute_signal(
+        technical_score=0.95, momentum_score=0.95, quality_score=0.36,
+        congress_score=0.90, trump_policy_score=0.90,
+        news_score=0.90, earnings_score=0.90,
+    )
+    assert result["label"] == "BUY"
+
+
+def test_gate_does_not_affect_avoid_signals():
+    # Low quality AND low composite → AVOID (gate condition composite > 0.57 is False)
+    result = compute_signal(
+        technical_score=0.20, momentum_score=0.20, quality_score=0.20,
+        congress_score=0.20, trump_policy_score=0.20,
+        news_score=0.20, earnings_score=0.20,
+    )
+    assert result["label"] == "AVOID"
+
+
+def test_gate_exact_quality_boundary():
+    # quality exactly 0.35 — strict < means gate does NOT fire
+    result = compute_signal(
+        technical_score=0.95, momentum_score=0.95, quality_score=0.35,
+        congress_score=0.90, trump_policy_score=0.90,
+        news_score=0.90, earnings_score=0.90,
+    )
+    assert result["label"] == "BUY"
