@@ -62,12 +62,59 @@ _BEARISH_PHRASES = frozenset({
 })
 
 
+_NEGATIONS = frozenset({
+    "not", "no", "never", "neither", "nor",
+    "failed", "unable", "won't", "cannot", "can't", "didn't", "doesn't", "don't",
+})
+
+
+def _has_negation(text: str, match_start: int, window: int = 5) -> bool:
+    """
+    Return True if a negation word appears within `window` words before `match_start`.
+    Operates on pre-tokenized words to avoid partial matches.
+    """
+    prefix = text[max(0, match_start - 60):match_start]
+    words = prefix.split()[-window:]
+    return any(w.rstrip(".,;:") in _NEGATIONS for w in words)
+
+
 def _count_keywords(text: str) -> tuple[int, int]:
-    """Count bullish and bearish signals in lowercased article text."""
-    bull = sum(1 for w in _BULLISH if re.search(rf"\b{re.escape(w)}\b", text))
-    bear = sum(1 for w in _BEARISH if re.search(rf"\b{re.escape(w)}\b", text))
-    bull += sum(1 for p in _BULLISH_PHRASES if p in text)
-    bear += sum(1 for p in _BEARISH_PHRASES if p in text)
+    """Count bullish and bearish signals in lowercased article text, with negation detection."""
+    bull = 0
+    bear = 0
+
+    for w in _BULLISH:
+        m = re.search(rf"\b{re.escape(w)}\b", text)
+        if m:
+            if _has_negation(text, m.start()):
+                bear += 1   # negated bullish → bearish flip
+            else:
+                bull += 1
+
+    for w in _BEARISH:
+        m = re.search(rf"\b{re.escape(w)}\b", text)
+        if m:
+            if _has_negation(text, m.start()):
+                bull += 1   # negated bearish → bullish flip
+            else:
+                bear += 1
+
+    for p in _BULLISH_PHRASES:
+        idx = text.find(p)
+        if idx != -1:
+            if _has_negation(text, idx):
+                bear += 1   # negated bullish phrase → bearish flip
+            else:
+                bull += 1
+
+    for p in _BEARISH_PHRASES:
+        idx = text.find(p)
+        if idx != -1:
+            if _has_negation(text, idx):
+                bull += 1   # negated bearish phrase → bullish flip
+            else:
+                bear += 1
+
     return bull, bear
 
 

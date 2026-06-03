@@ -50,18 +50,18 @@ def test_exact_avoid_boundary():
 # Individual layer weight verification
 # ---------------------------------------------------------------------------
 
-def test_technical_only_weight_is_020():
+def test_technical_only_weight_is_015():
     result = compute_signal(technical_score=1.0, momentum_score=0.0, quality_score=0.0,
                             congress_score=0.0, trump_policy_score=0.0,
                             news_score=0.0, earnings_score=0.0)
-    assert result["composite_score"] == pytest.approx(0.20, abs=0.0001)
+    assert result["composite_score"] == pytest.approx(0.15, abs=0.0001)
 
 
-def test_momentum_only_weight_is_025():
+def test_momentum_only_weight_is_030():
     result = compute_signal(technical_score=0.0, momentum_score=1.0, quality_score=0.0,
                             congress_score=0.0, trump_policy_score=0.0,
                             news_score=0.0, earnings_score=0.0)
-    assert result["composite_score"] == pytest.approx(0.25, abs=0.0001)
+    assert result["composite_score"] == pytest.approx(0.30, abs=0.0001)
 
 
 def test_quality_only_weight_is_015():

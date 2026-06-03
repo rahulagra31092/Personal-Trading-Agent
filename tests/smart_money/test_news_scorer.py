@@ -263,3 +263,37 @@ def test_description_field_contributes_to_score():
     with patch("smart_money.news_scorer.get_ticker_news", return_value=[article]):
         score = compute_news_score("AAPL")
     assert score > 0.5
+
+
+# ---------------------------------------------------------------------------
+# Negation detection
+# ---------------------------------------------------------------------------
+
+def test_negated_bullish_word_does_not_count_as_bullish():
+    bull, bear = _count_keywords("company did not beat expectations this quarter")
+    # "beat" is negated by "not" → should NOT count as bullish
+    assert bull == 0
+
+
+def test_negated_bearish_word_counts_as_bullish():
+    bull, bear = _count_keywords("stock will not decline further say analysts")
+    # "decline" is negated by "not" → flipped to bullish
+    assert bull >= 1
+    assert bear == 0
+
+
+def test_non_negated_bullish_still_counts():
+    bull, bear = _count_keywords("stock beat expectations and surged higher")
+    assert bull >= 2
+
+
+def test_cannot_negation_works():
+    bull2, bear2 = _count_keywords("analysts cannot recommend a buy at this price")
+    # "buy" negated by "cannot" → not bullish
+    assert bull2 == 0
+
+
+def test_no_negation_at_start():
+    bull, bear = _count_keywords("no growth is expected in q3")
+    # "growth" negated by "no" → not bullish
+    assert bull == 0

@@ -12,7 +12,7 @@ from quant.signals import compute_signal
 from quant.confidence import run_monte_carlo
 from quant.trade_setup import compute_trade_setup
 from smart_money.congress import compute_congress_score
-from smart_money.trump_scorer import compute_trump_policy_score
+from smart_money.estimate_revisions import compute_estimate_revision_score
 from smart_money.news_scorer import compute_news_score
 from smart_money.earnings_scorer import compute_earnings_score
 from quant.regime import get_market_regime, get_regime_weights
@@ -58,7 +58,7 @@ def analyze_ticker(ticker: str) -> dict:
     momentum_score = compute_momentum_score(ticker)
     quality_score = compute_quality_score(ticker)
     congress_score = compute_congress_score(ticker)
-    trump_policy_score = compute_trump_policy_score(ticker)
+    trump_policy_score = compute_estimate_revision_score(ticker)
     news_score = compute_news_score(ticker)
     earnings_score = compute_earnings_score(ticker)
 
