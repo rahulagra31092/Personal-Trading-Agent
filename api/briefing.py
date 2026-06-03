@@ -13,6 +13,7 @@ from api.paper_portfolio import (
 )
 from data.earnings import days_to_earnings
 from quant.regime import get_market_regime
+from quant.portfolio_risk import compute_portfolio_beta
 from smart_money.market_intel import (
     build_market_brief,
     get_index_snapshot,
@@ -70,6 +71,8 @@ _RANK_SELL_CUTOFF  = 30     # Sell if ranked outside top-30 AND score < buy min
 _BUY_SCORE_MIN     = 0.55   # Minimum Moderate conviction to enter a new position
 _MIN_HOLD_DAYS     = 30     # Don't rotate out within 30 days (except hard stop)
 _MAX_POSITIONS     = 20
+_PORTFOLIO_BETA_HIGH   = 1.25   # if portfolio beta exceeds this, raise entry bar
+_BUY_SCORE_HIGH_BETA   = 0.62   # minimum score when portfolio beta is elevated
 
 
 # Compact sector map for concentration display (covers our universe)
@@ -571,8 +574,11 @@ def _run_monthly_rebalance(all_results: list[dict], now: datetime, score_map: di
             })
             continue
 
-        # Rules 2 & 3 require minimum hold period
-        if days_held < _MIN_HOLD_DAYS:
+        # Rapid deterioration: large loss in first 10 days suspends the min-hold protection
+        rapid_deterioration = days_held <= 10 and drawdown < -8.0
+
+        # Rules 2 & 3 require minimum hold period (unless rapid deterioration)
+        if days_held < _MIN_HOLD_DAYS and not rapid_deterioration:
             kept.add(ticker)
             continue
 
@@ -603,6 +609,12 @@ def _run_monthly_rebalance(all_results: list[dict], now: datetime, score_map: di
     sold_set = {s["ticker"] for s in sells}
     slots = _MAX_POSITIONS - len(kept)
 
+    # Portfolio beta cap: if held positions are high-beta, demand stronger conviction for new buys
+    held_tickers = list(kept)
+    portfolio_beta = compute_portfolio_beta(held_tickers) if held_tickers else 1.0
+    effective_buy_min = _BUY_SCORE_HIGH_BETA if portfolio_beta > _PORTFOLIO_BETA_HIGH else _BUY_SCORE_MIN
+    logger.info("Portfolio beta: %.3f — effective buy threshold: %.2f", portfolio_beta, effective_buy_min)
+
     buys: list[dict] = []
     for r in ranked_all:
         if len(buys) >= slots:
@@ -611,7 +623,7 @@ def _run_monthly_rebalance(all_results: list[dict], now: datetime, score_map: di
         if t in kept or t in sold_set:
             continue
         score = r["signal"]["composite_score"]
-        if score < _BUY_SCORE_MIN:
+        if score < effective_buy_min:
             break  # sorted descending — no qualifying candidates remain
         price = r["current_price"]
         if price <= 0:
@@ -797,6 +809,20 @@ def send_daily_briefing(
                 regime=regime.get("regime", "unknown"),
             )
             logger.info("Paper portfolio auto-initialized with %d positions.", len(buys))
+
+    # Trailing stop check — fires independent of monthly rebalance
+    if is_initialized():
+        from api.paper_portfolio import update_peak_prices, check_trailing_stops, rebalance as _execute_rebalance
+        update_peak_prices()
+        trailing_stops = check_trailing_stops()
+        if trailing_stops:
+            trail_sells = [
+                {"ticker": s["ticker"], "price": s["price"], "reason": s["reason"]}
+                for s in trailing_stops
+            ]
+            _execute_rebalance(trail_sells, [])
+            _log_exits(trailing_stops, now.date().isoformat())
+            logger.info("Trailing stops fired: %s", [s["ticker"] for s in trailing_stops])
 
     # Paper portfolio caution check
     paper_value = get_portfolio_value() if is_initialized() else {"positions": []}
