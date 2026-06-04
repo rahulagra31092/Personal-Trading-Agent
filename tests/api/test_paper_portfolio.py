@@ -14,6 +14,7 @@ from api.paper_portfolio import (
     log_daily_scores,
     get_score_trend,
 )
+from api.paper_portfolio import log_weight_change, get_annual_weight_delta
 
 
 @pytest.fixture(autouse=True)
@@ -284,3 +285,36 @@ def test_score_trend_ticker_case_insensitive():
     log_daily_scores({"lower_t": 0.7}, date_str="2026-02-10")
     trend = get_score_trend("LOWER_T", as_of="2026-02-10")
     assert trend["latest_score"] == pytest.approx(0.7)
+
+
+def test_log_weight_change_and_retrieve():
+    log_weight_change("momentum", 0.25, 0.28, as_of="2026-01-10")
+    delta = get_annual_weight_delta("momentum", as_of="2026-01-10")
+    assert abs(delta - 0.03) < 0.001
+
+
+def test_get_annual_weight_delta_no_history_returns_zero():
+    delta = get_annual_weight_delta("unknown_factor_xyz", as_of="2026-01-10")
+    assert delta == 0.0
+
+
+def test_get_annual_weight_delta_sums_multiple_changes():
+    log_weight_change("technical", 0.20, 0.23, as_of="2026-01-10")
+    log_weight_change("technical", 0.23, 0.25, as_of="2026-04-01")
+    delta = get_annual_weight_delta("technical", as_of="2026-04-01")
+    assert abs(delta - 0.05) < 0.001
+
+
+def test_get_annual_weight_delta_ignores_changes_older_than_365_days():
+    log_weight_change("quality", 0.15, 0.18, as_of="2025-01-01")
+    log_weight_change("quality", 0.18, 0.20, as_of="2026-04-01")
+    # Only the 2026-04-01 change is within 365 days of 2026-04-01
+    delta = get_annual_weight_delta("quality", as_of="2026-04-01")
+    assert abs(delta - 0.02) < 0.001
+
+
+def test_log_weight_change_defaults_to_today():
+    from datetime import date
+    log_weight_change("earnings", 0.15, 0.17)
+    delta = get_annual_weight_delta("earnings")
+    assert abs(delta - 0.02) < 0.001

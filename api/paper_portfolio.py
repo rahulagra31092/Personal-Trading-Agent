@@ -75,6 +75,13 @@ def init_paper_db() -> None:
                 composite_score REAL NOT NULL,
                 PRIMARY KEY (ticker, score_date)
             );
+            CREATE TABLE IF NOT EXISTS weight_changes (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                factor      TEXT NOT NULL,
+                changed_at  TEXT NOT NULL,
+                old_weight  REAL NOT NULL,
+                new_weight  REAL NOT NULL
+            );
         """)
     # Idempotent schema migrations
     with _conn() as con:
@@ -194,6 +201,52 @@ def get_open_outcome_tickers() -> set[str]:
         return {r["ticker"] for r in rows}
     except Exception:
         return set()
+
+
+def log_weight_change(
+    factor: str,
+    old_weight: float,
+    new_weight: float,
+    as_of: str | None = None,
+) -> None:
+    """Record a quarterly weight update. as_of: ISO date, defaults to today."""
+    if as_of is None:
+        as_of = date.today().isoformat()
+    init_paper_db()
+    try:
+        with _conn() as con:
+            con.execute(
+                """INSERT INTO weight_changes (factor, changed_at, old_weight, new_weight)
+                   VALUES (?, ?, ?, ?)""",
+                (factor, as_of, round(float(old_weight), 4), round(float(new_weight), 4)),
+            )
+    except Exception as exc:
+        logger.warning("log_weight_change failed for %s: %s", factor, exc)
+
+
+def get_annual_weight_delta(factor: str, as_of: str | None = None) -> float:
+    """
+    Net signed weight drift for factor over the past 365 days from as_of.
+    Returns sum(new_weight - old_weight) for qualifying rows.
+    """
+    if as_of is None:
+        as_of = date.today().isoformat()
+    init_paper_db()
+    try:
+        with _conn() as con:
+            rows = con.execute(
+                """SELECT old_weight, new_weight FROM weight_changes
+                   WHERE factor = ?
+                     AND changed_at <= ?
+                     AND changed_at >= date(?, '-365 days')
+                   ORDER BY changed_at""",
+                (factor, as_of, as_of),
+            ).fetchall()
+    except Exception as exc:
+        logger.warning("get_annual_weight_delta failed for %s: %s", factor, exc)
+        return 0.0
+
+    return round(sum(row["new_weight"] - row["old_weight"] for row in rows), 4)
 
 
 def log_daily_scores(scores: dict[str, float], date_str: str | None = None) -> None:
