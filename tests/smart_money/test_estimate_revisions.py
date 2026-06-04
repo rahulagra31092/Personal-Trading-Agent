@@ -2,6 +2,20 @@ import pandas as pd
 import pytest
 from unittest.mock import patch, MagicMock
 from smart_money.estimate_revisions import compute_estimate_revision_score
+from data.cache import get_cache, set_cache
+
+
+@pytest.fixture(autouse=True)
+def _clear_est_revision_cache():
+    """Prevent live-run cache entries from polluting mocked tests."""
+    import sqlite3
+    try:
+        from data.cache import DB_PATH
+        with sqlite3.connect(DB_PATH) as con:
+            con.execute("DELETE FROM cache WHERE key LIKE 'est_revision:%'")
+    except Exception:
+        pass
+    yield
 
 
 def _make_upgrades_df(rows: list[tuple]) -> pd.DataFrame:

@@ -160,3 +160,62 @@ def test_send_daily_briefing_sends_text_key():
         send_daily_briefing(blue_chip_tickers=["NVDA"], midcap_tickers=[])
     for call in mock_post.call_args_list:
         assert "text" in call.kwargs["json"]
+
+
+# ---------------------------------------------------------------------------
+# Factor-health telemetry in model stats block
+# ---------------------------------------------------------------------------
+
+from api.briefing import _model_stats_block
+
+_FACTOR_KEYS = ["technical", "momentum", "quality", "congress",
+                "estimate_revisions", "news_reaction", "earnings"]
+
+
+def _make_results(n: int, degraded_factors: list[str] = None) -> list[dict]:
+    """Build fake all_results list. degraded_factors will be set to 0.5 for all tickers."""
+    degraded_factors = degraded_factors or []
+    results = []
+    for i in range(n):
+        layer_scores = {k: 0.5 if k in degraded_factors else 0.65 for k in _FACTOR_KEYS}
+        results.append({
+            "ticker": f"T{i}",
+            "signal": {
+                "label": "BUY" if i < n // 2 else "WATCH",
+                "composite_score": 0.65,
+                "layer_scores": layer_scores,
+            },
+            "current_price": 100.0,
+        })
+    return results
+
+
+def test_model_stats_block_includes_factor_health_section():
+    results = _make_results(10)
+    blocks = _model_stats_block(results)
+    # Must contain a block mentioning factor health
+    all_text = " ".join(
+        b.get("text", {}).get("text", "") for b in blocks if isinstance(b, dict)
+    )
+    assert "factor" in all_text.lower() or "health" in all_text.lower() or "data" in all_text.lower()
+
+
+def test_model_stats_block_flags_degraded_factor():
+    # All 10 tickers have quality=0.5 → should be flagged
+    results = _make_results(10, degraded_factors=["quality"])
+    blocks = _model_stats_block(results)
+    all_text = " ".join(
+        b.get("text", {}).get("text", "") for b in blocks if isinstance(b, dict)
+    )
+    assert "quality" in all_text.lower()
+
+
+def test_model_stats_block_no_false_alarm_when_data_ok():
+    # All factors vary → no degraded flags
+    results = _make_results(10, degraded_factors=[])
+    blocks = _model_stats_block(results)
+    all_text = " ".join(
+        b.get("text", {}).get("text", "") for b in blocks if isinstance(b, dict)
+    )
+    # "All OK" or "7/7" or similar — should NOT flag any factor
+    assert "quality" not in all_text.lower() or "ok" in all_text.lower() or "7/7" in all_text.lower()

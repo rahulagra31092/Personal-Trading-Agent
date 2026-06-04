@@ -165,6 +165,44 @@ def _signal_emoji(label: str) -> str:
 # Model signal distribution — shows the model is being selective
 # ---------------------------------------------------------------------------
 
+_FACTOR_LABELS = {
+    "technical": "Technical",
+    "momentum": "Momentum",
+    "quality": "Quality",
+    "congress": "Congress",
+    "estimate_revisions": "Est. Revisions",
+    "news_reaction": "News",
+    "earnings": "Earnings",
+}
+_FALLBACK_FLAG_THRESHOLD = 0.70  # flag factor if >70% of tickers return exactly 0.5
+
+
+def _factor_health_text(all_results: list[dict]) -> str:
+    """
+    Return a one-line factor-health summary for the Slack model stats block.
+    Flags any factor where >70% of tickers returned the neutral fallback (0.5).
+    Example: "Factor data: 7/7 OK" or "Factor data: 5/7 OK  ⚠ Quality, News"
+    """
+    if not all_results:
+        return "Factor data: no results"
+
+    n = len(all_results)
+    degraded = []
+    for key, label in _FACTOR_LABELS.items():
+        neutral_count = sum(
+            1 for r in all_results
+            if r.get("signal", {}).get("layer_scores", {}).get(key) == 0.5
+        )
+        if neutral_count / n > _FALLBACK_FLAG_THRESHOLD:
+            degraded.append(label)
+
+    total = len(_FACTOR_LABELS)
+    ok_count = total - len(degraded)
+    if not degraded:
+        return f"Factor data: {total}/{total} OK"
+    return f"Factor data: {ok_count}/{total} OK  ⚠ {', '.join(degraded)}"
+
+
 def _model_stats_block(all_results: list[dict]) -> list[dict]:
     buys   = [r for r in all_results if r["signal"]["label"] == "BUY"]
     avoids = [r for r in all_results if r["signal"]["label"] == "AVOID"]
@@ -185,7 +223,13 @@ def _model_stats_block(all_results: list[dict]) -> list[dict]:
     if top_sectors:
         line += f"\nStrength concentrated in: {', '.join(top_sectors)}"
 
-    return [{"type": "section", "text": {"type": "mrkdwn", "text": line}}]
+    blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": line}}]
+
+    # Factor health — appended after existing model stats line
+    health_text = _factor_health_text(all_results)
+    blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": health_text}})
+
+    return blocks
 
 
 # ---------------------------------------------------------------------------
