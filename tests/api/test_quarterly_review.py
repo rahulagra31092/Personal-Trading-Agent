@@ -45,6 +45,38 @@ def test_spearman_bounded():
     assert -1.0 <= r <= 1.0
 
 
+def test_spearman_handles_ties_correctly():
+    from api.quarterly_review import _spearman
+    # All xs are tied at the same value → correlation should be 0.0 (undefined → 0)
+    xs = [0.5, 0.5, 0.5, 0.5, 0.5]
+    ys = [1.0, 2.0, 3.0, 4.0, 5.0]
+    result = _spearman(xs, ys)
+    assert result == 0.0  # perfectly tied predictor → no correlation
+
+
+def test_spearman_tied_ranks_stays_in_bounds():
+    from api.quarterly_review import _spearman
+    # Heavy ties — many 0.5 defaults like real factor scores
+    xs = [0.5, 0.5, 0.5, 0.6, 0.5, 0.7, 0.5, 0.5, 0.6, 0.5]
+    ys = [5.0, -3.0, 8.0, 2.0, 1.0, 9.0, -1.0, 4.0, 3.0, 7.0]
+    result = _spearman(xs, ys)
+    assert -1.0 <= result <= 1.0  # biased formula can violate this
+
+
+def test_spearman_perfect_correlation_still_works():
+    from api.quarterly_review import _spearman
+    xs = [1.0, 2.0, 3.0, 4.0, 5.0]
+    ys = [2.0, 4.0, 6.0, 8.0, 10.0]
+    assert _spearman(xs, ys) == pytest.approx(1.0, abs=0.001)
+
+
+def test_spearman_perfect_anticorrelation():
+    from api.quarterly_review import _spearman
+    xs = [1.0, 2.0, 3.0, 4.0, 5.0]
+    ys = [5.0, 4.0, 3.0, 2.0, 1.0]
+    assert _spearman(xs, ys) == pytest.approx(-1.0, abs=0.001)
+
+
 # ---------------------------------------------------------------------------
 # Significance tests
 # ---------------------------------------------------------------------------

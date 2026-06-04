@@ -39,22 +39,43 @@ _MAX_DELTA  = 0.05   # no factor changes by more than 5pp per quarter
 # ---------------------------------------------------------------------------
 
 def _spearman(xs: list[float], ys: list[float]) -> float:
-    """Spearman rank correlation — robust to outliers like MU +208%."""
+    """
+    Tie-corrected Spearman rank correlation.
+    Uses average ranks for tied values (Pearson on ranks), which is correct
+    when factor scores cluster at defaults (e.g. many 0.5 values).
+    The simplified 1-6Σd²/n(n²-1) formula is biased with ties.
+    """
     n = len(xs)
     if n < 5:
         return 0.0
 
-    def _rank(vals: list[float]) -> list[float]:
-        indexed = sorted(enumerate(vals), key=lambda t: t[1])
+    def _avg_ranks(vals: list[float]) -> list[float]:
+        """Assign average rank to tied values (1-indexed)."""
+        indexed = sorted(range(n), key=lambda i: vals[i])
         ranks = [0.0] * n
-        for rank, (i, _) in enumerate(indexed, 1):
-            ranks[i] = float(rank)
+        i = 0
+        while i < n:
+            j = i
+            while j < n - 1 and vals[indexed[j + 1]] == vals[indexed[j]]:
+                j += 1
+            avg = (i + j) / 2.0 + 1.0  # 1-indexed average rank
+            for k in range(i, j + 1):
+                ranks[indexed[k]] = avg
+            i = j + 1
         return ranks
 
-    rx = _rank(xs)
-    ry = _rank(ys)
-    d_sq = sum((rx[i] - ry[i]) ** 2 for i in range(n))
-    return 1.0 - (6.0 * d_sq) / (n * (n * n - 1))
+    rx = _avg_ranks(xs)
+    ry = _avg_ranks(ys)
+
+    mean_rx = sum(rx) / n
+    mean_ry = sum(ry) / n
+    num = sum((rx[i] - mean_rx) * (ry[i] - mean_ry) for i in range(n))
+    den_x = sum((r - mean_rx) ** 2 for r in rx) ** 0.5
+    den_y = sum((r - mean_ry) ** 2 for r in ry) ** 0.5
+
+    if den_x == 0.0 or den_y == 0.0:
+        return 0.0
+    return round(num / (den_x * den_y), 4)
 
 
 def _significance(r: float, n: int) -> str:
