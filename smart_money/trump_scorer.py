@@ -1,3 +1,6 @@
+# DEPRECATED: trump_scorer.py is no longer called in the live pipeline.
+# The 7% weight slot is now filled by smart_money/estimate_revisions.py.
+# This file is kept for reference only.
 import re
 import logging
 from datetime import date, timedelta

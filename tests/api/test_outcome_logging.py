@@ -18,7 +18,7 @@ def tmp_db(tmp_path, monkeypatch):
 
 _SCORES = {
     "technical": 0.65, "momentum": 0.72, "quality": 0.55,
-    "congress": 0.60, "trump_policy": 0.55, "news_reaction": 0.50, "earnings": 0.58,
+    "congress": 0.60, "estimate_revisions": 0.55, "news_reaction": 0.50, "earnings": 0.58,
 }
 
 

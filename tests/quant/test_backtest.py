@@ -104,7 +104,7 @@ def _mock_signal(technical_score, **kwargs):
             "momentum": 0.8,
             "quality": 0.5,
             "congress": 0.5,
-            "trump_policy": 0.5,
+            "estimate_revisions": 0.5,
             "news_reaction": 0.5,
             "earnings": 0.5,
         },

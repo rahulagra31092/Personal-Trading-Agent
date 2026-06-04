@@ -6,7 +6,7 @@ def compute_signal(
     momentum_score: float = 0.5,
     quality_score: float = 0.5,
     congress_score: float = 0.5,
-    trump_policy_score: float = 0.5,
+    estimate_revisions_score: float = 0.5,
     news_score: float = 0.5,
     earnings_score: float = 0.5,
     weights: dict[str, float] | None = None,
@@ -17,7 +17,7 @@ def compute_signal(
         + w["momentum"] * momentum_score
         + w["quality"] * quality_score
         + w["congress"] * congress_score
-        + w["trump_policy"] * trump_policy_score
+        + w["estimate_revisions"] * estimate_revisions_score
         + w["news_reaction"] * news_score
         + w["earnings"] * earnings_score,
         4,
@@ -38,7 +38,7 @@ def compute_signal(
             "momentum": momentum_score,
             "quality": quality_score,
             "congress": congress_score,
-            "trump_policy": trump_policy_score,
+            "estimate_revisions": estimate_revisions_score,
             "news_reaction": news_score,
             "earnings": earnings_score,
         },

@@ -58,7 +58,7 @@ def analyze_ticker(ticker: str) -> dict:
     momentum_score = compute_momentum_score(ticker)
     quality_score = compute_quality_score(ticker)
     congress_score = compute_congress_score(ticker)
-    trump_policy_score = compute_estimate_revision_score(ticker)
+    estimate_revisions_score = compute_estimate_revision_score(ticker)
     news_score = compute_news_score(ticker)
     earnings_score = compute_earnings_score(ticker)
 
@@ -70,7 +70,7 @@ def analyze_ticker(ticker: str) -> dict:
         momentum_score=momentum_score,
         quality_score=quality_score,
         congress_score=congress_score,
-        trump_policy_score=trump_policy_score,
+        estimate_revisions_score=estimate_revisions_score,
         news_score=news_score,
         earnings_score=earnings_score,
         weights=regime_weights,

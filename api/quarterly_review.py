@@ -23,7 +23,7 @@ FACTORS: list[tuple[str, str]] = [
     ("score_momentum",     "Momentum"),
     ("score_quality",      "Quality"),
     ("score_congress",     "Congress"),
-    ("score_trump_policy", "Trump Policy"),
+    ("score_estimate_revisions", "Analyst Revisions"),
     ("score_news",         "News"),
     ("score_earnings",     "Earnings"),
 ]

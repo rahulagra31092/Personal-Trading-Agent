@@ -36,7 +36,7 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     "momentum": 0.30,
     "quality": 0.15,
     "congress": 0.08,
-    "trump_policy": 0.07,
+    "estimate_revisions": 0.07,
     "news_reaction": 0.10,
     "earnings": 0.15,
 }
@@ -54,20 +54,20 @@ assert abs(sum(SIGNAL_WEIGHTS.values()) - 1.0) < 1e-9, (
 REGIME_WEIGHTS: dict[str, dict[str, float]] = {
     "low_vol": {          # VIX < 15 — bull market, momentum heavily rewarded
         "technical": 0.13, "momentum": 0.37, "quality": 0.12,
-        "congress": 0.08, "trump_policy": 0.07, "news_reaction": 0.08, "earnings": 0.15,
+        "congress": 0.08, "estimate_revisions": 0.07, "news_reaction": 0.08, "earnings": 0.15,
     },
     "normal": SIGNAL_WEIGHTS,  # VIX 15-20 — baseline weights
     "elevated": {         # VIX 20-25 — momentum falters, quality/earnings take over
         "technical": 0.10, "momentum": 0.23, "quality": 0.22,
-        "congress": 0.08, "trump_policy": 0.07, "news_reaction": 0.10, "earnings": 0.20,
+        "congress": 0.08, "estimate_revisions": 0.07, "news_reaction": 0.10, "earnings": 0.20,
     },
     "high": {             # VIX 25-30 — preserve capital; quality + earnings dominate
         "technical": 0.08, "momentum": 0.12, "quality": 0.28,
-        "congress": 0.07, "trump_policy": 0.05, "news_reaction": 0.10, "earnings": 0.30,
+        "congress": 0.07, "estimate_revisions": 0.05, "news_reaction": 0.10, "earnings": 0.30,
     },
     "crisis": {           # VIX >= 30 — extreme stress; cash is valid
         "technical": 0.06, "momentum": 0.10, "quality": 0.32,
-        "congress": 0.05, "trump_policy": 0.05, "news_reaction": 0.10, "earnings": 0.32,
+        "congress": 0.05, "estimate_revisions": 0.05, "news_reaction": 0.10, "earnings": 0.32,
     },
 }
 for _regime, _w in REGIME_WEIGHTS.items():

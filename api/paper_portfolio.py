@@ -61,7 +61,7 @@ def init_paper_db() -> None:
                 score_momentum      REAL,
                 score_quality       REAL,
                 score_congress      REAL,
-                score_trump_policy  REAL,
+                score_estimate_revisions  REAL,
                 score_news          REAL,
                 score_earnings      REAL,
                 score_composite     REAL,
@@ -90,6 +90,13 @@ def init_paper_db() -> None:
         except sqlite3.OperationalError as exc:
             if "duplicate column" not in str(exc):
                 raise
+    try:
+        with _conn() as con:
+            con.execute(
+                "ALTER TABLE signal_outcomes RENAME COLUMN score_trump_policy TO score_estimate_revisions"
+            )
+    except Exception:
+        pass  # column already renamed or doesn't exist
 
 
 def _conn() -> sqlite3.Connection:
@@ -122,13 +129,13 @@ def log_trade_entry(
                 """INSERT INTO signal_outcomes
                    (ticker, entry_date, entry_price,
                     score_technical, score_momentum, score_quality,
-                    score_congress, score_trump_policy, score_news, score_earnings,
+                    score_congress, score_estimate_revisions, score_news, score_earnings,
                     score_composite, vix_at_entry, regime_at_entry, sector)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     ticker.upper(), entry_date, entry_price,
                     ls.get("technical"), ls.get("momentum"), ls.get("quality"),
-                    ls.get("congress"), ls.get("trump_policy"), ls.get("news_reaction"),
+                    ls.get("congress"), ls.get("estimate_revisions"), ls.get("news_reaction"),
                     ls.get("earnings"), composite_score,
                     vix, regime, sector,
                 ),
