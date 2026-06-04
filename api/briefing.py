@@ -10,6 +10,7 @@ from api.analyze import analyze_ticker
 from api.paper_portfolio import (
     get_portfolio_value, is_initialized, POSITION_SIZE, STARTING_CAPITAL,
     log_trade_entry, log_trade_exit, get_open_outcome_tickers, get_account,
+    log_daily_scores, get_score_trend,
 )
 from data.earnings import days_to_earnings
 from quant.regime import get_market_regime
@@ -321,8 +322,17 @@ def _picks_blocks(label: str, results: list[dict], n: int) -> list[dict]:
         conviction = _conviction(score)
         # Short line fits mobile: "#1 NVDA — BUY — 0.72 (High) — $224"
         price_str = f"${r['current_price']:.0f}" if r["current_price"] >= 10 else f"${r['current_price']:.2f}"
+        # 5-day score trend
+        trend = get_score_trend(r["ticker"])
+        delta = trend.get("delta_5d")
+        if delta is not None and abs(delta) >= 0.02:
+            arrow = "up" if delta > 0 else "dn"
+            trend_str = f"  [{arrow} {delta:+.2f}]"
+        else:
+            trend_str = ""
+
         lines.append(
-            f"*{i}. {r['ticker']}* — {sig['label']} — {score:.2f} ({conviction}) — {price_str}"
+            f"*{i}. {r['ticker']}* — {sig['label']} — {score:.2f} ({conviction}){trend_str} — {price_str}"
         )
 
     return [{"type": "section", "text": {"type": "mrkdwn", "text": "\n".join(lines)}}]
@@ -1010,6 +1020,15 @@ def send_daily_briefing(
         msg2_blocks += _upcoming_earnings_block(held_tickers)
         _post_to_slack({"text": f"Paper Portfolio — {date_str}", "blocks": msg2_blocks})
         logger.info("Message 2 sent.")
+
+    # Log today's composite scores for trend tracking
+    try:
+        daily_score_map = {
+            r["ticker"]: r["signal"]["composite_score"] for r in all_results
+        }
+        log_daily_scores(daily_score_map)
+    except Exception as exc:
+        logger.warning("Daily score logging failed: %s", exc)
 
     return all_results
 
