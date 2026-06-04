@@ -5,6 +5,15 @@ Uses only OHLCV-derivable factors (technical + momentum) since historical fundam
 snapshots are unavailable from yfinance. The 2-factor composite is a proxy, not a full
 model replay — it tests whether the core alpha source persists across market cycles.
 
+LIMITATIONS:
+- Survivorship bias: the default universe (BLUE_CHIP + MIDCAP) is today's winners.
+  Tickers with no pre-period data are filtered out automatically (score=0.5 < threshold),
+  but tickers that existed in 2019 and later failed/delisted are absent entirely.
+  Alpha estimates should be treated as upper-bound approximations, not ground truth.
+- Only 2 of 7 live model factors are backtested (technical + momentum).
+  Quality, congress, analyst revisions, news, and earnings lack historical OHLCV proxies.
+- No transaction costs or slippage modeled.
+
 Run manually:
     cd "C:\\Claude\\Trading Analyst"
     .venv\\Scripts\\python.exe -m quant.backtest_walkforward
@@ -207,6 +216,12 @@ def run_walkforward(
                     result["portfolio_size"])
 
     combined = {"years": year_results}
+    combined["survivorship_note"] = (
+        "WARNING: Universe is today's winners. Tickers with no pre-period data are "
+        "automatically excluded (score=0.5, below threshold), but the universe itself "
+        "is survivorship-biased. Alpha estimates are likely inflated. For unbiased "
+        "results, use a point-in-time S&P constituent list as the universe."
+    )
     combined["summary"] = check_success_criteria(combined)
     return combined
 

@@ -180,6 +180,28 @@ def test_run_walkforward_has_summary_key():
     assert "summary" in results
 
 
+def test_run_walkforward_includes_survivorship_note():
+    tickers = [f"T{i}" for i in range(5)]
+    fetch = _multi_year_fetch([2019, 2020, 2021])
+    results = run_walkforward(tickers, years=[2019, 2020, 2021], fetch_fn=fetch)
+    assert "survivorship_note" in results
+
+
+def test_run_walkforward_year_skips_tickers_with_no_scoring_data():
+    """Tickers with no pre-period data should be excluded from portfolio entirely."""
+    # T0 has data, T1 has NO scoring data (IPO after scoring period)
+    def fetch(ticker, start, end):
+        if ticker == "T0":
+            return _bars(300, trend=0.002)
+        if ticker == "SPY":
+            return _bars(252, trend=0.0004)
+        return []  # T1 has no data
+    result = run_walkforward_year(["T0", "T1"], measurement_year=2023, fetch_fn=fetch)
+    # T1 gets score 0.5 (below threshold) → not in portfolio
+    # T0 with strong trend should be selected
+    assert result["portfolio_size"] <= 1  # only T0 (or 0 if T0 return also missing)
+
+
 # ---------------------------------------------------------------------------
 # check_success_criteria
 # ---------------------------------------------------------------------------
