@@ -1,0 +1,76 @@
+{
+  "years": {
+    "2019": {
+      "model_return": 0.6956,
+      "spy_return": 0.3077,
+      "alpha": 0.3879,
+      "portfolio_size": 9,
+      "top_picks": [
+        "CROX",
+        "LLY",
+        "ENPH",
+        "AVGO",
+        "PG"
+      ]
+    },
+    "2020": {
+      "model_return": 0.6605,
+      "spy_return": 0.1664,
+      "alpha": 0.4941,
+      "portfolio_size": 20,
+      "top_picks": [
+        "AMD",
+        "LRCX",
+        "ENPH",
+        "AMAT",
+        "AAPL"
+      ]
+    },
+    "2021": {
+      "model_return": 0.4803,
+      "spy_return": 0.3084,
+      "alpha": 0.1719,
+      "portfolio_size": 20,
+      "top_picks": [
+        "TSLA",
+        "CELH",
+        "ZS",
+        "NET",
+        "CHWY"
+      ]
+    },
+    "2022": {
+      "model_return": -0.2215,
+      "spy_return": -0.1865,
+      "alpha": -0.035,
+      "portfolio_size": 20,
+      "top_picks": [
+        "NVDA",
+        "AMAT",
+        "ZS",
+        "SAIA",
+        "TSLA"
+      ]
+    },
+    "2023": {
+      "model_return": 0.3165,
+      "spy_return": 0.2671,
+      "alpha": 0.0494,
+      "portfolio_size": 20,
+      "top_picks": [
+        "XOM",
+        "SMCI",
+        "ELF",
+        "LLY",
+        "NOC"
+      ]
+    }
+  },
+  "summary": {
+    "passes": false,
+    "positive_alpha_years": 4,
+    "worst_annual_return": -0.2215,
+    "avg_alpha": 0.2137,
+    "reason": "Worst year -22.1% exceeds -18% drawdown limit"
+  }
+}
