@@ -15,6 +15,10 @@ from api.paper_portfolio import (
     get_score_trend,
 )
 from api.paper_portfolio import log_weight_change, get_annual_weight_delta
+from api.paper_portfolio import (
+    log_warren_decision, get_recent_warren_decisions,
+    log_warren_conversation, get_warren_conversation_history,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -318,3 +322,59 @@ def test_log_weight_change_defaults_to_today():
     log_weight_change("earnings", 0.15, 0.17)
     delta = get_annual_weight_delta("earnings")
     assert abs(delta - 0.02) < 0.001
+
+
+def test_log_warren_decision_stores_record():
+    log_warren_decision(
+        decision_type="buy",
+        recommendation="Buy 5 shares of AMD at market",
+        rationale="Highest conviction signal today at 0.78",
+        ticker="AMD",
+        model_score=0.78,
+        regime="normal",
+        as_of="2026-06-04",
+    )
+    decisions = get_recent_warren_decisions(days=7, as_of="2026-06-04")
+    assert len(decisions) >= 1
+    amd = next((d for d in decisions if d["ticker"] == "AMD"), None)
+    assert amd is not None
+    assert amd["decision_type"] == "buy"
+    assert amd["model_score"] == pytest.approx(0.78)
+
+
+def test_get_recent_warren_decisions_respects_days_window():
+    log_warren_decision(
+        decision_type="hold",
+        recommendation="Hold everything",
+        rationale="Regime is elevated, patience is the call",
+        ticker=None,
+        model_score=None,
+        regime="elevated",
+        as_of="2025-01-01",
+    )
+    decisions = get_recent_warren_decisions(days=7, as_of="2026-06-04")
+    old = [d for d in decisions if d["decision_date"] == "2025-01-01"]
+    assert old == []
+
+
+def test_log_warren_conversation_stores_record():
+    session = "test-session-001"
+    log_warren_conversation(session_id=session, interface="web", role="user",
+                            content="What do you think about AMD?")
+    log_warren_conversation(session_id=session, interface="web", role="warren",
+                            content="AMD is our highest conviction signal...")
+    history = get_warren_conversation_history(session_id=session)
+    assert len(history) == 2
+    assert history[0]["role"] == "user"
+    assert history[1]["role"] == "warren"
+
+
+def test_get_warren_conversation_history_chronological():
+    session = "test-session-002"
+    log_warren_conversation(session_id=session, interface="web", role="user",
+                            content="First message", as_of="2026-06-04T09:00:00")
+    log_warren_conversation(session_id=session, interface="web", role="warren",
+                            content="Second message", as_of="2026-06-04T09:01:00")
+    history = get_warren_conversation_history(session_id=session)
+    assert history[0]["content"] == "First message"
+    assert history[1]["content"] == "Second message"

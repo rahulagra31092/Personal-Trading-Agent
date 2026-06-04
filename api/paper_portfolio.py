@@ -82,6 +82,27 @@ def init_paper_db() -> None:
                 old_weight  REAL NOT NULL,
                 new_weight  REAL NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS warren_b_decisions (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                decision_date   TEXT NOT NULL,
+                ticker          TEXT,
+                decision_type   TEXT NOT NULL,
+                recommendation  TEXT NOT NULL,
+                rationale       TEXT NOT NULL,
+                model_score     REAL,
+                regime          TEXT,
+                outcome         TEXT DEFAULT 'pending',
+                outcome_note    TEXT DEFAULT '',
+                session_id      TEXT DEFAULT ''
+            );
+            CREATE TABLE IF NOT EXISTS warren_b_conversations (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id  TEXT NOT NULL,
+                interface   TEXT NOT NULL,
+                role        TEXT NOT NULL,
+                content     TEXT NOT NULL,
+                timestamp   TEXT NOT NULL
+            );
         """)
     # Idempotent schema migrations
     with _conn() as con:
@@ -254,6 +275,98 @@ def get_annual_weight_delta(factor: str, as_of: str | None = None) -> float:
         return 0.0
 
     return round(sum(row["new_weight"] - row["old_weight"] for row in rows), 4)
+
+
+def log_warren_decision(
+    decision_type: str,
+    recommendation: str,
+    rationale: str,
+    ticker: str | None = None,
+    model_score: float | None = None,
+    regime: str | None = None,
+    session_id: str = "",
+    as_of: str | None = None,
+) -> None:
+    """Log a Warren B recommendation to the decision log."""
+    if as_of is None:
+        as_of = date.today().isoformat()
+    init_paper_db()
+    try:
+        with _conn() as con:
+            con.execute(
+                """INSERT INTO warren_b_decisions
+                   (decision_date, ticker, decision_type, recommendation, rationale,
+                    model_score, regime, session_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (as_of, ticker, decision_type, recommendation, rationale,
+                 model_score, regime, session_id),
+            )
+    except Exception as exc:
+        logger.warning("log_warren_decision failed: %s", exc)
+
+
+def get_recent_warren_decisions(days: int = 30, as_of: str | None = None) -> list[dict]:
+    """Return Warren B decisions from the last `days` calendar days."""
+    if as_of is None:
+        as_of = date.today().isoformat()
+    init_paper_db()
+    try:
+        with _conn() as con:
+            rows = con.execute(
+                """SELECT * FROM warren_b_decisions
+                   WHERE decision_date >= date(?, ?)
+                     AND decision_date <= ?
+                   ORDER BY decision_date DESC, id DESC""",
+                (as_of, f"-{days} days", as_of),
+            ).fetchall()
+        return [dict(r) for r in rows]
+    except Exception as exc:
+        logger.warning("get_recent_warren_decisions failed: %s", exc)
+        return []
+
+
+def log_warren_conversation(
+    session_id: str,
+    interface: str,
+    role: str,
+    content: str,
+    as_of: str | None = None,
+) -> None:
+    """Store one turn of conversation (role = 'user' or 'warren')."""
+    if as_of is None:
+        as_of = datetime.now().isoformat(timespec="seconds")
+    init_paper_db()
+    try:
+        with _conn() as con:
+            con.execute(
+                """INSERT INTO warren_b_conversations
+                   (session_id, interface, role, content, timestamp)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (session_id, interface, role, content, as_of),
+            )
+    except Exception as exc:
+        logger.warning("log_warren_conversation failed: %s", exc)
+
+
+def get_warren_conversation_history(
+    session_id: str,
+    limit: int = 50,
+) -> list[dict]:
+    """Return conversation turns for a session, oldest first."""
+    init_paper_db()
+    try:
+        with _conn() as con:
+            rows = con.execute(
+                """SELECT role, content, timestamp FROM warren_b_conversations
+                   WHERE session_id = ?
+                   ORDER BY id ASC
+                   LIMIT ?""",
+                (session_id, limit),
+            ).fetchall()
+        return [dict(r) for r in rows]
+    except Exception as exc:
+        logger.warning("get_warren_conversation_history failed: %s", exc)
+        return []
 
 
 def log_daily_scores(scores: dict[str, float], date_str: str | None = None) -> None:
