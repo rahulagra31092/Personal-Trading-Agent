@@ -25,6 +25,24 @@ def compute_short_position_size(
     return round(min(total_capital * max_pct, total_capital * short_pct))
 
 
+def _conviction_mult(composite_score: float) -> float:
+    """
+    Linear interpolation between conviction anchors — no discontinuous cliff.
+      <=0.55 → 0.65×  (floor)
+      0.65   → 1.00×  (base, anchor)
+      >=0.75 → 1.40×  (high conviction, cap)
+    """
+    if composite_score <= 0.55:
+        return 0.65
+    if composite_score >= 0.75:
+        return 1.40
+    if composite_score < 0.65:
+        t = (composite_score - 0.55) / 0.10
+        return round(0.65 + t * 0.35, 4)
+    t = (composite_score - 0.65) / 0.10
+    return round(1.00 + t * 0.40, 4)
+
+
 def compute_conviction_position_size(
     base_size: float,
     composite_score: float,
@@ -36,24 +54,15 @@ def compute_conviction_position_size(
     """
     Conviction-adjusted position size in dollars.
 
-    conviction_mult:
-      composite >= 0.75 → 1.40×  (high conviction)
-      composite >= 0.65 → 1.00×  (moderate conviction)
-      composite <  0.65 → 0.65×  (entry-level conviction)
+    conviction_mult: linearly interpolated via _conviction_mult()
+      <=0.55 → 0.65×, 0.65 → 1.00×, >=0.75 → 1.40× (no cliff at boundaries)
 
     vol_mult: 0.75 + 0.50 * garch_vol_scalar
       scalar=0.2 (high vol) → 0.85×; scalar=0.5 → 1.00×; scalar=0.8 (low vol) → 1.15×
 
     Hard cap: min(size, total_capital * max_capital_pct)
     """
-    if composite_score >= 0.75:
-        conviction_mult = 1.40
-    elif composite_score >= 0.65:
-        conviction_mult = 1.00
-    else:
-        conviction_mult = 0.65
-
     vol_mult = 0.75 + 0.50 * garch_vol_scalar
-    size = base_size * conviction_mult * regime_factor * vol_mult
+    size = base_size * _conviction_mult(composite_score) * regime_factor * vol_mult
     max_size = total_capital * max_capital_pct
     return round(min(size, max_size))

@@ -61,7 +61,7 @@ def test_short_position_size_bounded():
     assert CAPITAL * 0.005 <= short_size <= CAPITAL * 0.01
 
 
-from quant.position_sizing import compute_conviction_position_size
+from quant.position_sizing import compute_conviction_position_size, _conviction_mult
 
 CAPITAL_CONVICTION = 10_000.0
 BASE = 500.0
@@ -69,12 +69,14 @@ BASE = 500.0
 
 def test_low_conviction_reduces_size():
     size = compute_conviction_position_size(BASE, composite_score=0.60, total_capital=CAPITAL_CONVICTION)
-    assert size == round(BASE * 0.65)
+    # 0.60 interpolates to 0.825× (halfway between 0.65× and 1.00× anchors); vol_mult=1.0 at default scalar
+    assert size == round(BASE * _conviction_mult(0.60))
 
 
 def test_medium_conviction_uses_base_size():
     size = compute_conviction_position_size(BASE, composite_score=0.70, total_capital=CAPITAL_CONVICTION)
-    assert size == BASE
+    # 0.70 interpolates to 1.20× (halfway between 1.00× and 1.40× anchors); vol_mult=1.0
+    assert size == round(BASE * _conviction_mult(0.70))
 
 
 def test_high_conviction_increases_size():
@@ -117,6 +119,13 @@ def test_conviction_boundary_exactly_065():
 
 
 def test_conviction_boundary_exactly_075():
-    # Exactly at 0.75 → high conviction (>=0.75 tier)
+    # Exactly at 0.75 → high conviction anchor (1.40×)
     size = compute_conviction_position_size(BASE, composite_score=0.75, total_capital=CAPITAL_CONVICTION)
     assert size == round(BASE * 1.40)
+
+
+def test_no_cliff_at_075_boundary():
+    """Scores just below and just above 0.75 should produce near-identical sizes, not a 40% jump."""
+    below = compute_conviction_position_size(BASE, composite_score=0.749, total_capital=CAPITAL_CONVICTION)
+    above = compute_conviction_position_size(BASE, composite_score=0.751, total_capital=CAPITAL_CONVICTION)
+    assert abs(above - below) < BASE * 0.10  # less than 10% gap across the boundary
