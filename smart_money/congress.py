@@ -6,12 +6,87 @@ import requests
 import yfinance as yf
 
 from data.cache import get_cache, set_cache
+from util.timeout import timeout
+from util.data_health import record_fetch
 import config
 
 logger = logging.getLogger(__name__)
 
 _QUIVER_API_KEY: str | None = config.QUIVER_API_KEY
 _QUIVER_BASE = "https://api.quiverquant.com/beta"
+
+
+@timeout(10, default=[])
+def _get_edgar_insider_trades(ticker: str) -> list[dict]:
+    """
+    Fallback: fetch insider trades from SEC Form 4 filings via yfinance.
+    Converts to Congress-trade-like format.
+    """
+    try:
+        ticker = ticker.strip().upper()
+        t = yf.Ticker(ticker)
+        insider_txns = t.insider_transactions
+
+        if insider_txns is None or insider_txns.empty:
+            logger.debug("No SEC EDGAR insider transactions available for %s", ticker)
+            return []
+
+        trades = []
+        for idx, row in insider_txns.iterrows():
+            try:
+                # Extract transaction type
+                txn_type = row.get("Transaction", "")
+                if "sale" in txn_type.lower():
+                    txn_label = "Insider Sale"
+                elif "purchase" in txn_type.lower():
+                    txn_label = "Insider Purchase"
+                else:
+                    continue
+
+                # Extract date
+                date_val = row.get("Date")
+                if date_val is None:
+                    continue
+                if hasattr(date_val, "isoformat"):
+                    date_str = date_val.isoformat()
+                else:
+                    date_str = str(date_val)
+
+                # Extract share count
+                shares = float(row.get("Shares", 0) or 0)
+                if shares <= 0:
+                    continue
+
+                # Extract insider name
+                insider_name = row.get("Insider", "")
+                if not insider_name:
+                    insider_name = "Unknown Insider"
+
+                # Infer dollar range: assume $100-300/share
+                lower_est = int(shares * 100)
+                upper_est = int(shares * 300)
+                range_str = f"${lower_est:,}-${upper_est:,}"
+
+                trade = {
+                    "Date": date_str,
+                    "Transaction": txn_label,
+                    "Range": range_str,
+                    "Representative": insider_name,
+                    "Amount": shares,
+                }
+                trades.append(trade)
+
+            except Exception as e:
+                logger.debug("Failed to parse SEC EDGAR trade row for %s: %s", ticker, e)
+                continue
+
+        record_fetch("edgar_insider_trades", success=True)
+        return trades
+
+    except Exception as exc:
+        logger.warning("SEC EDGAR insider trades fetch failed for %s: %s", ticker, exc)
+        record_fetch("edgar_insider_trades", success=False)
+        return []
 
 
 def get_congress_trades(ticker: str) -> list[dict]:
@@ -21,20 +96,30 @@ def get_congress_trades(ticker: str) -> list[dict]:
     if cached is not None:
         return cached
 
-    if not _QUIVER_API_KEY:
-        return []
+    trades = []
 
-    try:
-        resp = requests.get(
-            f"{_QUIVER_BASE}/historical/congresstrading/{ticker}",
-            headers={"Authorization": f"Token {_QUIVER_API_KEY}"},
-            timeout=10,
-        )
-        resp.raise_for_status()
-        trades = resp.json()
-    except Exception as exc:
-        logger.warning("Congress trades fetch failed for %s: %s", ticker, exc)
-        return []
+    # Try Quiver Congress first (paid API, Congress-specific)
+    if _QUIVER_API_KEY:
+        try:
+            resp = requests.get(
+                f"{_QUIVER_BASE}/historical/congresstrading/{ticker}",
+                headers={"Authorization": f"Token {_QUIVER_API_KEY}"},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            trades = resp.json()
+            record_fetch("quiver_congress", success=True)
+        except Exception as exc:
+            logger.warning("Congress trades fetch failed for %s: %s", ticker, exc)
+            record_fetch("quiver_congress", success=False)
+    else:
+        logger.debug("Quiver API key not configured")
+        record_fetch("quiver_congress", success=False)
+
+    # Fall back to SEC EDGAR if Congress unavailable
+    if not trades:
+        logger.info("Falling back to SEC EDGAR insider trades for %s", ticker)
+        trades = _get_edgar_insider_trades(ticker)
 
     set_cache(cache_key, trades, ttl_seconds=6 * 3600)
     return trades
