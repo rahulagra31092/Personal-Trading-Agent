@@ -1,6 +1,6 @@
 """Tests for Warren B FastAPI routes."""
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from api.main import app
 
@@ -62,3 +62,22 @@ def test_warren_b_slack_command_returns_200():
             "response_url": "https://hooks.slack.com/fake",
         })
     assert resp.status_code == 200
+
+
+def test_warren_b_stream_returns_sse():
+    with patch("anthropic.Anthropic") as mock_anthropic_cls, \
+         patch("data.warren_b_memory.build_context_string", return_value="context"), \
+         patch("api.paper_portfolio.log_warren_conversation"):
+        mock_client = mock_anthropic_cls.return_value
+        mock_stream = MagicMock()
+        mock_stream.text_stream = ["Hello", " ", "Warren"]
+        mock_stream.__enter__ = MagicMock(return_value=mock_stream)
+        mock_stream.__exit__ = MagicMock(return_value=None)
+        mock_client.messages.stream.return_value = mock_stream
+
+        resp = client.post("/warren-b/stream", json={
+            "message": "Test message",
+            "session_id": "test-stream-001",
+        })
+    assert resp.status_code == 200
+    assert "text/event-stream" in resp.headers["content-type"]

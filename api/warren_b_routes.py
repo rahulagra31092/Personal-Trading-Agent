@@ -109,6 +109,8 @@ def warren_stream(req: ChatRequest) -> StreamingResponse:
                 system=WARREN_B_SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": f"{context}\n\n{req.message}"}],
             ) as stream:
+                # Emit session_id as first event so client can correlate
+                yield f'data: {{"session_id": "{session_id}"}}\n\n'
                 for text in stream.text_stream:
                     full_response.append(text)
                     yield f"data: {text}\n\n"
@@ -119,7 +121,7 @@ def warren_stream(req: ChatRequest) -> StreamingResponse:
             )
         except Exception as exc:
             logger.exception("Warren B stream failed")
-            yield f"data: [ERROR] Warren B is temporarily unavailable.\n\n"
+            yield "data: Warren B is temporarily unavailable.\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
