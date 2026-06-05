@@ -35,7 +35,7 @@ def get_earnings_calendar(ticker: str) -> dict:
     except Exception:
         pass
 
-    set_cache(cache_key, result, ttl_seconds=86400)
+    set_cache(cache_key, result, ttl_seconds=21600)  # 6 hours for freshness on earnings calendar
     return result
 
 

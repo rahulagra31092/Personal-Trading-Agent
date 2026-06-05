@@ -20,6 +20,7 @@ STALENESS_LIMITS = {
     "yfinance_quality": 604800,    # 7 days (quarterly data)
     "yfinance_info": 604800,       # 7 days (quarterly data)
     "quiver_congress": 21600,      # 6 hours
+    "edgar_insider_trades": 21600, # 6 hours
     "earnings_calendar": 21600,    # 6 hours
     "news_api": 3600,              # 1 hour
     "estimate_revisions": 86400,   # 24 hours
