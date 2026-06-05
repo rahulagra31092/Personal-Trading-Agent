@@ -1,0 +1,259 @@
+================================================================================
+                    DATA RESILIENCE AUDIT - EXECUTIVE BRIEF
+                          Trading Analyst System
+                              2026-06-05
+================================================================================
+
+CRITICAL FINDING: System is unsuitable for live trading at any scale without fixes.
+
+7 CRITICAL VULNERABILITIES IDENTIFIED:
+
+1. POLYGON API → SINGLE POINT OF FAILURE
+   - No fallback source wired
+   - Signal generation halts entirely if offline
+   - Fix: Wire yfinance fallback (2 hours)
+   Status: ❌ CRITICAL
+
+2. yFINANCE CALLS → NO TIMEOUT ENFORCEMENT
+   - Can hang indefinitely (default system timeout = many minutes)
+   - Used in 4 scorers (momentum, quality, earnings, estimate_revisions)
+   - Timeout → score defaults to 0.5 (neutral), signal degrades
+   - Fix: Wrap yfinance calls with 15-second timeout (3 hours)
+   Status: ❌ CRITICAL
+
+3. CONGRESS TRADES → 6-HOUR STALE DATA WINDOW
+   - If API fails, serves stale trades for entire trading day
+   - Quiver API has no fallback source
+   - Fix: Add SEC EDGAR fallback (4 hours)
+   Status: ❌ HIGH
+
+4. EARNINGS CALENDAR → 24-HOUR CACHE TOO AGGRESSIVE
+   - Pre-earnings earnings dates change frequently
+   - Modifiers applied to stale dates cause signal errors
+   - Fix: Reduce TTL to 6 hours (2 hours)
+   Status: ❌ HIGH
+
+5. NO STALENESS MONITORING
+   - Can serve days-old cached data without alerting
+   - Users unaware of data freshness degradation
+   - Fix: Track data_published_at in cache layer (4 hours)
+   Status: ❌ HIGH
+
+6. NO CIRCUIT BREAKER
+   - Multiple simultaneous API failures cause cascading signal degradation
+   - No hard stop when data quality below threshold
+   - Fix: Implement circuit breaker state machine (TBD in Phase 2)
+   Status: ⚠️  MEDIUM
+
+7. NO DATA QUALITY REPORTING
+   - Response doesn't include freshness score or warnings
+   - Users get 0.62 signal without knowing if data is stale
+   - Fix: Add data_quality dict to /analyze response (2 hours)
+   Status: ⚠️  MEDIUM
+
+================================================================================
+                            RECOMMENDED ACTION
+================================================================================
+
+PHASE 1 - CRITICAL FIXES (This Week, 16 hours):
+├─ Polygon → yfinance fallback (2h)
+├─ yfinance timeout enforcement (3h)
+├─ Congress trades SEC EDGAR fallback (4h)
+├─ Earnings cache TTL reduction (2h)
+├─ Staleness monitoring foundation (4h)
+└─ Data quality metadata (2h)
+   └─ Enables: Paper trading + small live trading ($10-25K)
+
+PHASE 2 - RESILIENCE INFRASTRUCTURE (Next Week, 17 hours):
+├─ Exponential backoff wrapper (3h)
+├─ Dual-source news tracking (2h)
+├─ VIX regime improvements (2h)
+├─ Health check endpoint (3h)
+├─ Automated staleness alerts (4h)
+├─ Multi-source Congress API (2h)
+└─ Circuit breaker state machine (4h, deferred)
+   └─ Enables: Live trading up to $100K notional
+
+PHASE 3 - PRODUCTION HARDENING (Week 3+):
+├─ 2-week staging validation with synthetic failures
+├─ Load testing (1000 concurrent requests)
+├─ Monitoring & alerting setup
+└─ Go-live Phase 2 with $2.5K initial capital
+
+================================================================================
+                              EFFORT SUMMARY
+================================================================================
+
+Total Implementation Time: 33 hours
+├─ Phase 1 (Critical): 16 hours (45%)
+├─ Phase 2 (Resilience): 17 hours (52%)
+└─ Phase 3 (Validation): Ongoing
+
+Recommended Staffing: 1 developer, 2-3 weeks
+
+Risk Level: LOW
+- No production deployment until Phase 1 complete
+- Can run in parallel with paper trading
+- Fallback patterns extensively tested in codebase
+
+================================================================================
+                            DATA SOURCE INVENTORY
+================================================================================
+
+LAYER 1: TECHNICAL INDICATORS
+├─ Primary: Polygon API (1h cache)
+├─ Current Risk: Single point of failure
+├─ Fallback: yfinance ← TODO
+└─ Status: ❌ CRITICAL
+
+LAYER 2: MOMENTUM
+├─ Primary: yfinance (1y history, no cache)
+├─ Current Risk: No timeout enforcement
+├─ Fallback: Polygon 12-month history ← TODO
+└─ Status: ❌ CRITICAL
+
+LAYER 3: QUALITY (FUNDAMENTALS)
+├─ Primary: yfinance.Ticker.info (7d cache)
+├─ Current Risk: No timeout, stale fundamentals
+├─ Fallback: yfinance info → neutral (0.5) fallback
+└─ Status: ⚠️  HIGH
+
+LAYER 4: CONGRESS TRADES
+├─ Primary: Quiver Quantum (6h cache)
+├─ Current Risk: 6h stale window; no fallback
+├─ Fallback: SEC EDGAR ← TODO
+└─ Status: ❌ HIGH
+
+LAYER 5: ESTIMATE REVISIONS
+├─ Primary: yfinance upgrades_downgrades (24h cache)
+├─ Secondary: yfinance recommendation mean
+├─ Current Risk: 24h cache too aggressive
+├─ Fallback: yfinance consensus recommendation
+└─ Status: ⚠️  MEDIUM
+
+LAYER 6: NEWS SENTIMENT
+├─ Primary: Newsdata.io (1h cache)
+├─ Secondary: NewsAPI fallback
+├─ Current Risk: Both can fail silently
+├─ Fallback: 0.5 (neutral) + alert
+└─ Status: ✅ GOOD (dual-source wired)
+
+LAYER 7: EARNINGS
+├─ Primary: yfinance calendar (24h cache)
+├─ Current Risk: Stale earnings dates
+├─ Fallback: Skip modifier if stale
+└─ Status: ⚠️  HIGH (reduce to 6h)
+
+CROSS-LAYER: MARKET REGIME (VIX)
+├─ Primary: yfinance ^VIX (1h cache)
+├─ Current Risk: Falls back to hardcoded regime
+├─ Fallback: Previous regime (5m old)
+└─ Status: ⚠️  MEDIUM
+
+================================================================================
+                          STALENESS THRESHOLDS
+================================================================================
+
+Component           Current TTL    Recommended Max Age    Alert When >
+─────────────────────────────────────────────────────────────────────
+Technical bars      1 hour         4 hours                3 hours
+Momentum            None           2 hours                1 hour
+Quality (funds)     7 days         3 days (post-earnings) 2 days
+Congress trades     6 hours        2 hours                1 hour ← FIX
+News sentiment      1 hour         2 hours                1 hour
+Earnings calendar   24 hours       6 hours ← FIX          3 hours
+VIX/Regime         1 hour         30 minutes             15 minutes
+
+================================================================================
+                          PRODUCTION READINESS
+================================================================================
+
+Current State:
+├─ Paper trading: ✅ READY (483 tests passing)
+├─ Small live ($10-25K): ⚠️  RISKY (needs Phase 1 fixes)
+├─ Medium live ($100K+): ❌ NOT READY (needs Phase 1 + 2)
+└─ Enterprise (multi-user): ❌ NOT READY
+
+With Phase 1 (this week):
+├─ Paper trading: ✅ READY
+├─ Small live ($10-25K): ✅ ACCEPTABLE (with monitoring)
+├─ Medium live ($100K+): ⚠️  RISKY (needs Phase 2)
+└─ Enterprise: ❌ NOT READY
+
+With Phase 1 + 2 (next week):
+├─ Paper trading: ✅ READY
+├─ Small live ($10-25K): ✅ GOOD
+├─ Medium live ($100K+): ✅ ACCEPTABLE (with operator oversight)
+└─ Enterprise: ⚠️  RISKY (needs Phase 3)
+
+With Phase 1 + 2 + 3 (post-validation):
+├─ Paper trading: ✅ READY
+├─ Small live ($10-25K): ✅ EXCELLENT
+├─ Medium live ($100K+): ✅ GOOD
+└─ Enterprise (multi-user): ✅ ACCEPTABLE
+
+================================================================================
+                        DOCUMENTS GENERATED
+================================================================================
+
+1. DATA_RESILIENCE_AUDIT_REPORT.md (26 sections)
+   ├─ Executive summary
+   ├─ Data source inventory (detailed staleness analysis)
+   ├─ Circuit breaker rules
+   ├─ Production resilience stack architecture
+   ├─ Implementation roadmap (Phase 1-3)
+   ├─ Code patterns for robust data fetching
+   └─ Monitoring checklist
+
+2. IMPLEMENTATION_GUIDE.md (6 fixes with code)
+   ├─ Fix 1: Polygon → yfinance fallback (2h)
+   ├─ Fix 2: yfinance timeout enforcement (3h)
+   ├─ Fix 3: Congress trades fallback (4h)
+   ├─ Fix 4: Earnings cache TTL reduction (2h)
+   ├─ Fix 5: Staleness monitoring foundation (4h)
+   ├─ Fix 6: Data quality metadata (2h)
+   └─ Tests for each fix
+
+3. AUDIT_SUMMARY.txt (this file)
+   └─ Quick reference for stakeholders
+
+================================================================================
+                          NEXT STEPS
+================================================================================
+
+IMMEDIATE (Today):
+1. Review audit findings with team
+2. Prioritize Phase 1 fixes
+3. Assign developer to timeout enforcement
+
+WEEK 1:
+1. Implement Phase 1 critical fixes (16h)
+2. Run 483-test suite on each fix
+3. Test fallback paths manually
+
+WEEK 2:
+1. Implement Phase 2 resilience infrastructure (17h)
+2. Add integration tests for circuit breaker
+3. Set up monitoring/alerting
+
+WEEK 3-4:
+1. Staging validation with synthetic failures
+2. Load testing
+3. Go-live Phase 2 with $2.5K initial capital
+
+================================================================================
+                          CONTACT & QUESTIONS
+================================================================================
+
+Audit Completed By: Claude Code (Haiku 4.5)
+Report Date: 2026-06-05
+Codebase: C:\Claude\Trading Analyst
+Files Analyzed: 85+ Python modules
+Test Coverage: 483 tests in place
+
+For questions:
+- See DATA_RESILIENCE_AUDIT_REPORT.md (detailed reference)
+- See IMPLEMENTATION_GUIDE.md (code examples)
+- Run tests: pytest tests/ -v
+
+================================================================================
