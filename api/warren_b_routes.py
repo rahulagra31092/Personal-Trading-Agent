@@ -1,8 +1,11 @@
 """FastAPI routes for Warren B AI Financial Advisor."""
+import json
 import logging
+import sqlite3
 import uuid
 from typing import Annotated
 
+import anthropic as anthropic_sdk
 import requests
 from fastapi import APIRouter, BackgroundTasks, Form, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
@@ -82,7 +85,6 @@ def warren_chat(req: ChatRequest) -> ChatResponse:
 @router.post("/stream")
 def warren_stream(req: ChatRequest) -> StreamingResponse:
     """SSE streaming endpoint for web chat UI."""
-    import anthropic as anthropic_sdk
     from data.warren_b_memory import build_context_string
     from api.paper_portfolio import log_warren_conversation
     from ai.warren_b import WARREN_B_SYSTEM_PROMPT
@@ -99,8 +101,9 @@ def warren_stream(req: ChatRequest) -> StreamingResponse:
         role="user", content=req.message,
     )
 
+    client = anthropic_sdk.Anthropic(api_key=config.CLAUDE_API_KEY)
+
     def event_stream():
-        client = anthropic_sdk.Anthropic(api_key=config.CLAUDE_API_KEY)
         full_response = []
         try:
             with client.messages.stream(
@@ -109,8 +112,8 @@ def warren_stream(req: ChatRequest) -> StreamingResponse:
                 system=WARREN_B_SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": f"{context}\n\n{req.message}"}],
             ) as stream:
-                # Emit session_id as first event so client can correlate
-                yield f'data: {{"session_id": "{session_id}"}}\n\n'
+                session_id_event = json.dumps({"session_id": session_id})
+                yield f"data: {session_id_event}\n\n"
                 for text in stream.text_stream:
                     full_response.append(text)
                     yield f"data: {text}\n\n"
@@ -120,8 +123,8 @@ def warren_stream(req: ChatRequest) -> StreamingResponse:
                 role="warren", content="".join(full_response),
             )
         except Exception as exc:
-            logger.exception("Warren B stream failed")
-            yield "data: Warren B is temporarily unavailable.\n\n"
+            logger.exception("Warren B stream failed: %s", exc)
+            yield "data: Warren B encountered an error. Please try again.\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
@@ -162,6 +165,25 @@ def slack_command(
 def get_decisions(days: int = 30) -> list:
     """Return Warren B's recent decisions."""
     return get_recent_warren_decisions(days=days)
+
+
+@router.get("/sessions")
+def get_sessions(limit: int = 20) -> list:
+    """List recent conversation sessions."""
+    try:
+        from api.paper_portfolio import PAPER_DB_PATH
+        with sqlite3.connect(PAPER_DB_PATH) as con:
+            con.row_factory = sqlite3.Row
+            rows = con.execute(
+                """SELECT DISTINCT session_id FROM warren_b_conversations
+                   ORDER BY timestamp DESC
+                   LIMIT ?""",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+    except Exception as exc:
+        logger.warning("get_sessions failed: %s", exc)
+        return []
 
 
 @router.get("/ui", response_class=HTMLResponse)

@@ -81,3 +81,10 @@ def test_warren_b_stream_returns_sse():
         })
     assert resp.status_code == 200
     assert "text/event-stream" in resp.headers["content-type"]
+
+
+def test_warren_b_sessions_returns_list():
+    with patch("api.warren_b_routes.sqlite3.connect"):
+        resp = client.get("/warren-b/sessions")
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
