@@ -146,15 +146,21 @@ async function sendMessage() {
         if (line.startsWith('data: ')) {
           const chunk = line.slice(6);
           if (chunk === '[DONE]') break;
-          if (chunk.startsWith('[ERROR]') || chunk.startsWith('{')) {
+          if (chunk.startsWith('{')) {
             try {
               const json = JSON.parse(chunk);
               if (json.session_id && !sessionIdReceived) {
                 sessionIdReceived = true;
               }
+              if (json.content) {
+                warrenBubble.textContent += json.content;
+              }
             } catch (e) {
+              // Fallback: append raw chunk if JSON parse fails
               warrenBubble.textContent += chunk;
             }
+          } else if (chunk.startsWith('[ERROR]')) {
+            warrenBubble.textContent += chunk;
           } else {
             warrenBubble.textContent += chunk;
           }

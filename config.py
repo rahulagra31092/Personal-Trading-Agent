@@ -27,8 +27,8 @@ SLACK_SIGNING_SECRET: str | None = os.environ.get("SLACK_SIGNING_SECRET") or Non
 WARREN_B_API_KEY: str | None = os.environ.get("WARREN_B_API_KEY") or None
 
 # Model IDs — centralized to prevent version mismatches
-CLAUDE_MODEL_SONNET = "claude-sonnet-4-6-20250514"
-CLAUDE_MODEL_HAIKU = "claude-3-5-haiku-20241022"
+CLAUDE_MODEL_SONNET = "claude-sonnet-4-6"
+CLAUDE_MODEL_HAIKU = "claude-haiku-4-5-20251001"
 
 EXCLUDED_TICKERS: frozenset[str] = frozenset()
 

@@ -128,28 +128,30 @@ RED LINES — THINGS WARREN B NEVER DOES:
 """
 
 
-def _extract_and_log_decision(response_text: str, session_id: str) -> None:
+def _extract_and_log_decision(response_text: str, session_id: str, interface: str = "web") -> None:
     """
     Extract actionable recommendations from Warren's response and log them.
     Looks for explicit recommendation patterns (BUY, SELL, HOLD, REBALANCE, etc).
+    Only logs if a high-confidence decision pattern is found (word boundary context).
     """
     import re
-    # Simple pattern: look for lines that contain recommendation keywords
+    # Stricter patterns: require word boundaries to avoid false positives like "await" → "wait"
     patterns = [
-        (r"(?:BUY|ADD|INCREASE).*?(?:shares?|position|allocation|exposure)?", "buy"),
-        (r"(?:SELL|REDUCE|TRIM|EXIT).*?(?:shares?|position)?", "sell"),
-        (r"(?:HOLD|WAIT|SIT|STAND PAT)", "hold"),
-        (r"(?:REBALANCE|ROTATE|SHIFT|PIVOT)", "rebalance"),
-        (r"(?:DEPLOY|ALLOCATE|PUT).*?\$?\d+", "monthly_deploy"),
+        (r"\b(?:BUY|ADD|INCREASE)\b.*?(?:shares?|position|allocation|exposure)", "buy"),
+        (r"\b(?:SELL|REDUCE|TRIM|EXIT)\b.*?(?:shares?|position)", "sell"),
+        (r"\b(?:HOLD|STAND PAT)\b", "hold"),
+        (r"\b(?:REBALANCE|ROTATE|SHIFT|PIVOT)\b", "rebalance"),
+        (r"\b(?:DEPLOY|ALLOCATE|PUT TO WORK)\b.*?\$?\d+", "monthly_deploy"),
     ]
     for pattern, decision_type in patterns:
         match = re.search(pattern, response_text, re.IGNORECASE)
         if match:
             try:
+                rationale = f"Extracted from {interface} conversation"
                 log_warren_decision(
                     decision_type=decision_type,
                     recommendation=match.group(0),
-                    rationale="Extracted from briefing",
+                    rationale=rationale,
                     session_id=session_id,
                 )
             except Exception as exc:
@@ -193,7 +195,7 @@ def chat(
     )
 
     # Extract and log any actionable decisions from the response
-    _extract_and_log_decision(response_text, session_id)
+    _extract_and_log_decision(response_text, session_id, interface=interface)
 
     return response_text
 
@@ -214,6 +216,9 @@ def generate_briefing(session_id: str | None = None) -> str:
         session_id=session_id, interface="briefing",
         role="warren", content=response_text,
     )
+
+    # Extract and log any recommendations from the briefing
+    _extract_and_log_decision(response_text, session_id, interface="briefing")
 
     return response_text
 
@@ -242,6 +247,9 @@ def generate_monthly_strategy(session_id: str | None = None) -> str:
         session_id=session_id, interface="briefing",
         role="warren", content=response_text,
     )
+
+    # Extract and log any deployment/allocation recommendations
+    _extract_and_log_decision(response_text, session_id, interface="monthly")
 
     return response_text
 

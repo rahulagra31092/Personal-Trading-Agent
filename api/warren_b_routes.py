@@ -165,41 +165,55 @@ def warren_stream(req: ChatRequest, _: None = Depends(_verify_api_key)) -> Strea
 
 
 @router.post("/briefing", status_code=202)
-def trigger_briefing(background_tasks: BackgroundTasks) -> JSONResponse:
+def trigger_briefing(background_tasks: BackgroundTasks, _: None = Depends(_verify_api_key)) -> JSONResponse:
     """Trigger Warren B's daily briefing."""
     background_tasks.add_task(_run_briefing_and_post)
     return JSONResponse(status_code=202, content={"status": "accepted", "mode": "warren-briefing"})
 
 
 @router.post("/monthly", status_code=202)
-def trigger_monthly(background_tasks: BackgroundTasks) -> JSONResponse:
+def trigger_monthly(background_tasks: BackgroundTasks, _: None = Depends(_verify_api_key)) -> JSONResponse:
     """Trigger Warren B's monthly strategy."""
     background_tasks.add_task(_run_monthly_and_post)
     return JSONResponse(status_code=202, content={"status": "accepted", "mode": "warren-monthly"})
 
 
 @router.post("/slack-command")
-def slack_command(
-    text: Annotated[str, Form()] = "",
-    user_id: Annotated[str, Form()] = "",
-    response_url: Annotated[str, Form()] = "",
+async def slack_command(
+    request: object,
     x_slack_signature: Annotated[str | None, Header()] = None,
     x_slack_request_timestamp: Annotated[str | None, Header()] = None,
 ) -> JSONResponse:
     """Slack slash command handler for /warren. Verifies Slack signature if configured."""
-    # Verify Slack signature (if signing secret is configured)
-    if config.SLACK_SIGNING_SECRET and x_slack_signature and x_slack_request_timestamp:
-        import time
-        # Reject requests older than 5 minutes
-        req_timestamp = int(x_slack_request_timestamp)
-        current_timestamp = int(time.time())
-        if abs(current_timestamp - req_timestamp) > 300:
-            raise HTTPException(status_code=401, detail="Request timestamp too old")
-        # HMAC verification of signature would need the raw body, which TestClient doesn't provide cleanly
-        # For production, enable signature verification via Slack signing secret
+    from fastapi import Request
 
+    # Handle both raw Request object (production) and form-parsed data (testing)
+    if isinstance(request, Request):
+        body = await request.body()
+        # Verify Slack signature (if signing secret is configured)
+        if config.SLACK_SIGNING_SECRET:
+            if not x_slack_signature or not x_slack_request_timestamp:
+                raise HTTPException(status_code=401, detail="Missing Slack signature headers")
+            try:
+                _verify_slack_signature(x_slack_signature, x_slack_request_timestamp, body)
+            except HTTPException:
+                raise
+
+        # Parse form data from raw body
+        try:
+            import urllib.parse
+            form_data = urllib.parse.parse_qs(body.decode())
+            text = form_data.get("text", [""])[0].strip()
+            user_id = form_data.get("user_id", [""])[0].strip()
+        except Exception as exc:
+            logger.exception("Failed to parse Slack form data: %s", exc)
+            return JSONResponse(status_code=400, content={"detail": "Invalid form data"})
+    else:
+        # Request object not available (shouldn't happen in normal operation)
+        return JSONResponse(status_code=400, content={"detail": "Invalid request context"})
+
+    question = text.strip() if text else "Give me a quick market update."
     session_id = f"slack-{user_id}-{uuid.uuid4()}"
-    question = text.strip() or "Give me a quick market update."
     try:
         response = chat(message=question, session_id=session_id, interface="slack")
         return JSONResponse(content={"response_type": "in_channel", "text": f"*Warren B*\n\n{response}"})
@@ -210,17 +224,17 @@ def slack_command(
 
 
 @router.get("/decisions")
-def get_decisions(days: int = 30) -> list:
+def get_decisions(days: int = 30, _: None = Depends(_verify_api_key)) -> list:
     """Return Warren B's recent decisions."""
     return get_recent_warren_decisions(days=days)
 
 
 @router.get("/sessions")
-def get_sessions(limit: int = 20) -> list:
+def get_sessions(limit: int = 20, _: None = Depends(_verify_api_key)) -> list:
     """List recent conversation sessions."""
     try:
-        from api.paper_portfolio import PAPER_DB_PATH
-        with sqlite3.connect(PAPER_DB_PATH) as con:
+        from api.paper_portfolio import _conn
+        with _conn() as con:
             con.row_factory = sqlite3.Row
             rows = con.execute(
                 """SELECT DISTINCT session_id FROM warren_b_conversations
