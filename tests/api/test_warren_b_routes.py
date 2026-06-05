@@ -59,10 +59,38 @@ def test_warren_b_decisions_returns_list():
     assert isinstance(resp.json(), list)
 
 
-def test_warren_b_slack_command_verifies_signature_function_exists():
-    """Test Slack signature verification function is available (C3 regression test)."""
-    # The actual signature verification is tested in a separate unit test.
-    # This test verifies the security function exists and is properly wired.
+def test_warren_b_slack_command_accepts_valid_request():
+    """Test Slack slash command accepts properly formatted request (integration test for C3)."""
+    import time
+    import urllib.parse
+
+    # Build form-encoded body as Slack would send
+    form_data = {
+        "text": "Should I add AMD?",
+        "user_id": "U12345",
+        "response_url": "https://hooks.slack.com/commands/fake",
+    }
+    body = urllib.parse.urlencode(form_data)
+
+    with patch("api.warren_b_routes.chat", return_value="Here's my analysis..."):
+        # POST with proper form content-type (Slack sends this way)
+        resp = client.post(
+            "/warren-b/slack-command",
+            content=body,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-Slack-Signature": "v0=test",  # Verification skipped in test (no secret set)
+                "X-Slack-Request-Timestamp": str(int(time.time())),
+            },
+        )
+
+    # Should succeed (200, not 422 validation error or 401 signature failure)
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
+    assert "Warren" in resp.text or "response_type" in resp.text
+
+
+def test_warren_b_slack_signature_verification_callable():
+    """Test Slack signature verification function exists and is callable (C3 unit test)."""
     from api.warren_b_routes import _verify_slack_signature
     assert callable(_verify_slack_signature), "HMAC signature verification should be callable"
 
@@ -90,8 +118,15 @@ def test_warren_b_stream_returns_sse():
 
 
 def test_warren_b_sessions_returns_list():
-    with patch("api.warren_b_routes.sqlite3.connect"), \
+    with patch("api.paper_portfolio._conn") as mock_conn, \
          patch.dict("os.environ", {"WARREN_B_API_KEY": "test-key"}):
+        # Mock the _conn context manager
+        mock_con = MagicMock()
+        mock_con.execute.return_value.fetchall.return_value = []
+        mock_con.__enter__ = MagicMock(return_value=mock_con)
+        mock_con.__exit__ = MagicMock(return_value=None)
+        mock_conn.return_value = mock_con
+
         resp = client.get("/warren-b/sessions", headers={"X-API-Key": "test-key"})
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
@@ -134,30 +169,36 @@ def test_sse_stream_returns_content_field():
     assert "Multi" in body, "Response text should be present in SSE body"
 
 
-def test_slack_command_requires_api_auth_when_configured():
-    """H1: Verify /slack-command requires API-key auth when WARREN_B_API_KEY is set."""
-    # Test with auth required
-    from fastapi.testclient import TestClient
+def test_slack_command_signature_required_when_secret_set():
+    """H1: Verify /slack-command requires Slack signature when SLACK_SIGNING_SECRET is set."""
+    import time
+    import urllib.parse
     from unittest.mock import patch
 
-    with patch.dict("os.environ", {"WARREN_B_API_KEY": "test-secret"}):
-        # Force config reload
+    # When SLACK_SIGNING_SECRET is set, invalid signature should be rejected
+    with patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "test-secret"}):
         import importlib
         import config
         importlib.reload(config)
 
-        # Create new client with updated config
         from api.main import app as fresh_app
         test_client = TestClient(fresh_app)
 
-        # Should reject without API key
-        resp = test_client.post("/warren-b/slack-command", data={
-            "text": "test",
-            "user_id": "U123",
-        })
-        # Will fail during form parsing in async context, but auth headers missing = bad request
-        assert resp.status_code in (400, 401, 422), \
-            f"Expected 400/401/422 without API key, got {resp.status_code}"
+        form_data = {"text": "test", "user_id": "U123"}
+        body = urllib.parse.urlencode(form_data)
+
+        # POST without valid signature headers
+        resp = test_client.post(
+            "/warren-b/slack-command",
+            content=body,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-Slack-Signature": "invalid",
+                "X-Slack-Request-Timestamp": str(int(time.time())),
+            },
+        )
+        # Should reject invalid signature
+        assert resp.status_code == 401, f"Expected 401, got {resp.status_code}"
 
 
 def test_slack_signature_verification_enabled():

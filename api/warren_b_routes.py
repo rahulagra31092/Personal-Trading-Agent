@@ -10,7 +10,7 @@ from typing import Annotated
 
 import anthropic as anthropic_sdk
 import requests
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Header, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -180,14 +180,12 @@ def trigger_monthly(background_tasks: BackgroundTasks, _: None = Depends(_verify
 
 @router.post("/slack-command")
 async def slack_command(
-    request: object,
+    request: Request,
     x_slack_signature: Annotated[str | None, Header()] = None,
     x_slack_request_timestamp: Annotated[str | None, Header()] = None,
 ) -> JSONResponse:
     """Slack slash command handler for /warren. Verifies Slack signature if configured."""
-    from fastapi import Request
-
-    # Handle both raw Request object (production) and form-parsed data (testing)
+    # Handle raw Request object with raw body reading for signature verification
     if isinstance(request, Request):
         body = await request.body()
         # Verify Slack signature (if signing secret is configured)

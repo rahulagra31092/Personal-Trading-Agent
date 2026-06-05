@@ -244,7 +244,7 @@ def generate_monthly_strategy(session_id: str | None = None) -> str:
     )
 
     log_warren_conversation(
-        session_id=session_id, interface="briefing",
+        session_id=session_id, interface="monthly",
         role="warren", content=response_text,
     )
 
