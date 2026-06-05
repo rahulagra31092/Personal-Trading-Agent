@@ -4,6 +4,8 @@ from typing import Optional
 import yfinance as yf
 
 from data.cache import get_cache, set_cache
+from util.timeout import timeout
+from util.data_health import record_fetch
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,7 @@ def _debt_score(de: float) -> float:
     return min(1.0, max(0.0, 1.0 - de * 0.15))
 
 
+@timeout(15, default=0.5)
 def compute_quality_score(ticker: str) -> float:
     """
     Quality factor: ROE 35% · FCF margin 30% · Gross margin 20% · Debt 15%.
@@ -40,10 +43,12 @@ def compute_quality_score(ticker: str) -> float:
     cache_key = f"quality:{ticker}"
     cached = get_cache(cache_key)
     if cached is not None:
+        record_fetch("yfinance_quality", success=True)
         return cached
 
     try:
         info = yf.Ticker(ticker).info or {}
+        record_fetch("yfinance_quality", success=True)
         scores: dict[str, float] = {}
 
         roe: Optional[float] = info.get("returnOnEquity")
@@ -78,4 +83,5 @@ def compute_quality_score(ticker: str) -> float:
 
     except Exception as exc:
         logger.warning("quality score failed for %s: %s", ticker, exc)
+        record_fetch("yfinance_quality", success=False)
         return 0.5

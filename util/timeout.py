@@ -5,10 +5,10 @@ Wraps external API calls (yfinance, Polygon, etc.) with timeout enforcement.
 If call exceeds time limit, returns None or default value instead of hanging.
 """
 import logging
-import signal
 import time
 from functools import wraps
 from typing import Any, Callable, Optional, TypeVar
+from threading import Thread
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class TimeoutError(Exception):
 
 def timeout(seconds: int = 15, default: Any = None):
     """
-    Decorator to enforce timeout on function calls.
+    Decorator to enforce timeout on function calls (thread-based, Windows-compatible).
 
     Args:
         seconds: Timeout in seconds (default 15)
@@ -32,28 +32,35 @@ def timeout(seconds: int = 15, default: Any = None):
         @timeout(15, default=0.5)
         def compute_signal():
             ...
+
+    Note: Uses threading rather than signals for cross-platform compatibility.
     """
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(*args, **kwargs) -> T:
-            def timeout_handler(signum, frame):
-                raise TimeoutError(f"{func.__name__} exceeded {seconds}s timeout")
+            result_container = {"result": default, "finished": False}
+            exception_container = {"exception": None}
 
-            # Set signal handler
-            old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(seconds)
+            def target():
+                try:
+                    result_container["result"] = func(*args, **kwargs)
+                    result_container["finished"] = True
+                except Exception as e:
+                    exception_container["exception"] = e
+                    result_container["finished"] = True
 
-            try:
-                result = func(*args, **kwargs)
-                signal.alarm(0)  # Disable alarm
-                return result
-            except TimeoutError as e:
-                logger.error(f"Timeout on {func.__name__}: {e}")
+            thread = Thread(target=target, daemon=True)
+            thread.start()
+            thread.join(timeout=seconds)
+
+            if result_container["finished"]:
+                if exception_container["exception"]:
+                    logger.error(f"Exception in {func.__name__}: {exception_container['exception']}")
+                    return default
+                return result_container["result"]
+            else:
+                logger.error(f"Timeout on {func.__name__} (exceeded {seconds}s)")
                 return default
-            finally:
-                # Restore old handler
-                signal.alarm(0)
-                signal.signal(signal.SIGALRM, old_handler)
 
         return wrapper
     return decorator

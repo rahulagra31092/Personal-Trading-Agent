@@ -16,6 +16,8 @@ from smart_money.estimate_revisions import compute_estimate_revision_score
 from smart_money.news_scorer import compute_news_score
 from smart_money.earnings_scorer import compute_earnings_score
 from quant.regime import get_market_regime, get_regime_weights
+from util.data_health import record_fetch, get_health_report, get_staleness_warnings
+from util.circuit_breaker import record_failure, record_success, should_generate_signals
 import config
 
 logger = logging.getLogger(__name__)
@@ -38,20 +40,40 @@ _TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 
 
 def analyze_ticker(ticker: str) -> dict:
+    # Check if circuit breaker is OPEN (halt signal generation)
+    if not should_generate_signals():
+        raise HTTPException(
+            status_code=503,
+            detail="Data quality degraded — circuit breaker is OPEN. Retry in 5 minutes."
+        )
+
     ticker = ticker.strip().upper()
     if not _TICKER_RE.match(ticker):
         raise ValueError(f"Invalid ticker format: {ticker!r}")
     if config.is_excluded(ticker):
         raise ValueError(f"{ticker} is excluded from analysis")
 
-    bars = get_daily_bars(ticker, days=250)
+    try:
+        bars = get_daily_bars(ticker, days=250)
+        record_fetch("polygon_bars", success=True)
+    except Exception as e:
+        record_fetch("polygon_bars", success=False)
+        record_failure("polygon_bars", str(e))
+        raise
+
     if len(bars) < 60:
         raise ValueError(f"Insufficient history for {ticker}: {len(bars)} bars (need 60)")
 
     prices = [b["c"] for b in bars]
     current_price = float(bars[-1]["c"])
 
-    spy_return_3m = _spy_3m_return()
+    try:
+        spy_return_3m = _spy_3m_return()
+        record_fetch("spy_bars", success=True)
+    except Exception:
+        spy_return_3m = None
+        record_fetch("spy_bars", success=False)
+
     ind = compute_indicators(bars, spy_return_3m=spy_return_3m)
     garch = compute_garch_volatility(prices)
 
@@ -79,7 +101,38 @@ def analyze_ticker(ticker: str) -> dict:
     mc = run_monte_carlo(current_price, max(garch["daily_vol"], 0.001))
     trade_card = compute_trade_setup(current_price, ind["atr_stop"])
 
-    return {
+    # Sanitize for JSON: convert inf/nan to None
+    def sanitize_for_json(obj):
+        if isinstance(obj, float):
+            if obj != obj or (obj == float('inf')) or (obj == float('-inf')):
+                return None
+            return obj
+        elif isinstance(obj, dict):
+            return {k: sanitize_for_json(v) for k, v in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [sanitize_for_json(x) for x in obj]
+        return obj
+
+    mc = sanitize_for_json(mc)
+    trade_card = sanitize_for_json(trade_card)
+
+    # Get health report
+    health = get_health_report()
+
+    # Record success if we got here
+    record_success()
+
+    # Sanitize health sources for JSON serialization (remove infinity values)
+    sanitized_sources = {}
+    for name, source_data in health["sources"].items():
+        sanitized = dict(source_data)
+        # Replace infinity age_seconds with None for JSON safety
+        if sanitized.get("age_seconds") is None:
+            sanitized["age_seconds"] = None
+        sanitized_sources[name] = sanitized
+
+    # Build response and sanitize all floats for JSON serialization
+    response = {
         "ticker": ticker,
         "signal": sig,
         "confidence": mc,
@@ -92,7 +145,26 @@ def analyze_ticker(ticker: str) -> dict:
         "trade_card": trade_card,
         "market_regime": regime.get("regime", "normal"),
         "vix": regime.get("vix", 0.0),
+        "data_health": {
+            "sources": sanitized_sources,
+            "staleness_warnings": health["staleness_warnings"],
+            "is_healthy": health["is_healthy"],
+        },
     }
+
+    # Recursively sanitize all float values
+    def sanitize_floats(obj):
+        if isinstance(obj, float):
+            if obj != obj or (obj == float('inf')) or (obj == float('-inf')):
+                return None
+            return obj
+        elif isinstance(obj, dict):
+            return {k: sanitize_floats(v) for k, v in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [sanitize_floats(x) for x in obj]
+        return obj
+
+    return sanitize_floats(response)
 
 
 @router.get("/analyze/{ticker}")

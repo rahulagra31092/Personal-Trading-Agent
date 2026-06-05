@@ -4,6 +4,8 @@ from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 from data.earnings import get_earnings_calendar
+from util.timeout import timeout
+from util.data_health import record_fetch
 
 _ET = ZoneInfo("America/New_York")
 logger = logging.getLogger(__name__)
@@ -26,6 +28,7 @@ def _growth_score(growth: float) -> float:
     return min(1.0, max(0.0, 0.5 + growth * 2.0))
 
 
+@timeout(15, default=0.5)
 def compute_earnings_score(ticker: str) -> float:
     """
     EPS quality signal [0, 1].
@@ -35,8 +38,10 @@ def compute_earnings_score(ticker: str) -> float:
     """
     try:
         cal = get_earnings_calendar(ticker)
+        record_fetch("earnings_calendar", success=True)
     except Exception as exc:
         logger.warning("earnings calendar failed for %s: %s", ticker, exc)
+        record_fetch("earnings_calendar", success=False)
         return 0.5
 
     scores: dict[str, float] = {}

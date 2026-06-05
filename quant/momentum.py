@@ -6,6 +6,8 @@ import yfinance as yf
 import pandas as pd
 
 from data.cache import get_cache, set_cache
+from util.timeout import timeout
+from util.data_health import record_fetch
 
 logger = logging.getLogger(__name__)
 
@@ -114,17 +116,20 @@ def compute_momentum_score_from_bars(bars: list[dict]) -> float:
         return 0.5
 
 
+@timeout(15, default=0.5)
 def compute_momentum_score(ticker: str, signal_date: Optional[str] = None) -> float:
     """Multi-timeframe price momentum factor score in [0, 1]. Cached 24h."""
     cache_key = f"momentum:{ticker}:{signal_date or 'live'}"
     cached = get_cache(cache_key)
     if cached is not None:
+        record_fetch("yfinance_momentum", success=True)
         return cached
 
     try:
         end = signal_date if signal_date else None
         hist: pd.DataFrame = yf.download(ticker, period="15mo", progress=False,
                                           auto_adjust=True, end=end)
+        record_fetch("yfinance_momentum", success=True)
 
         if isinstance(hist.columns, pd.MultiIndex):
             close_data = hist["Close"]
@@ -145,4 +150,5 @@ def compute_momentum_score(ticker: str, signal_date: Optional[str] = None) -> fl
 
     except Exception as exc:
         logger.warning("momentum score failed for %s: %s", ticker, exc)
+        record_fetch("yfinance_momentum", success=False)
         return 0.5
