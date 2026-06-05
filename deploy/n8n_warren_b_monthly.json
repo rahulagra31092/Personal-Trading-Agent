@@ -1,0 +1,30 @@
+{
+  "name": "Warren B — Monthly Strategy",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "15 13 1 * *" }]
+        }
+      },
+      "name": "Cron — 1st of Month 8:15am ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:8000/warren-b/monthly",
+        "options": { "timeout": 300000 }
+      },
+      "name": "Trigger Warren B Monthly Strategy",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Cron — 1st of Month 8:15am ET": {
+      "main": [[{ "node": "Trigger Warren B Monthly Strategy", "type": "main", "index": 0 }]]
+    }
+  }
+}

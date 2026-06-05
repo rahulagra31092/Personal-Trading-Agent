@@ -1,0 +1,30 @@
+{
+  "name": "Warren B — Daily Briefing",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "5 13 * * 1-5" }]
+        }
+      },
+      "name": "Cron — Weekdays 8:05am ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:8000/warren-b/briefing",
+        "options": { "timeout": 300000 }
+      },
+      "name": "Trigger Warren B Briefing",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Cron — Weekdays 8:05am ET": {
+      "main": [[{ "node": "Trigger Warren B Briefing", "type": "main", "index": 0 }]]
+    }
+  }
+}
