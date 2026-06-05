@@ -128,6 +128,35 @@ RED LINES — THINGS WARREN B NEVER DOES:
 """
 
 
+def _extract_and_log_decision(response_text: str, session_id: str) -> None:
+    """
+    Extract actionable recommendations from Warren's response and log them.
+    Looks for explicit recommendation patterns (BUY, SELL, HOLD, REBALANCE, etc).
+    """
+    import re
+    # Simple pattern: look for lines that contain recommendation keywords
+    patterns = [
+        (r"(?:BUY|ADD|INCREASE).*?(?:shares?|position|allocation|exposure)?", "buy"),
+        (r"(?:SELL|REDUCE|TRIM|EXIT).*?(?:shares?|position)?", "sell"),
+        (r"(?:HOLD|WAIT|SIT|STAND PAT)", "hold"),
+        (r"(?:REBALANCE|ROTATE|SHIFT|PIVOT)", "rebalance"),
+        (r"(?:DEPLOY|ALLOCATE|PUT).*?\$?\d+", "monthly_deploy"),
+    ]
+    for pattern, decision_type in patterns:
+        match = re.search(pattern, response_text, re.IGNORECASE)
+        if match:
+            try:
+                log_warren_decision(
+                    decision_type=decision_type,
+                    recommendation=match.group(0),
+                    rationale="Extracted from briefing",
+                    session_id=session_id,
+                )
+            except Exception as exc:
+                logger.warning("Failed to log decision: %s", exc)
+            break  # Log only the first/highest-priority recommendation
+
+
 def chat(
     message: str,
     session_id: str | None = None,
@@ -162,6 +191,9 @@ def chat(
         session_id=session_id, interface=interface,
         role="warren", content=response_text,
     )
+
+    # Extract and log any actionable decisions from the response
+    _extract_and_log_decision(response_text, session_id)
 
     return response_text
 
@@ -218,9 +250,11 @@ def _call_claude(system: str, messages: list[dict], max_tokens: int = 2000) -> s
     """Call Claude API and return the text response."""
     client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model=config.CLAUDE_MODEL_SONNET,
         max_tokens=max_tokens,
         system=system,
         messages=messages,
     )
+    if not response.content or not response.content[0].text:
+        raise ValueError("Empty response from Claude API")
     return response.content[0].text

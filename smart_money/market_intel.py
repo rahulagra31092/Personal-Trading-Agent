@@ -209,10 +209,12 @@ def build_market_brief(
             f"Max 220 words total. Sound like a trusted advisor, not a newsletter."
         )
         msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+            model=config.CLAUDE_MODEL_HAIKU,
             max_tokens=350,
             messages=[{"role": "user", "content": prompt}],
         )
+        if not msg.content or not msg.content[0].text:
+            raise ValueError("Empty response from Claude API")
         return msg.content[0].text.strip()
     except Exception as exc:
         logger.warning("Claude market brief failed: %s", exc)

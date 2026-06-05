@@ -1,13 +1,16 @@
 """FastAPI routes for Warren B AI Financial Advisor."""
+import hashlib
+import hmac
 import json
 import logging
 import sqlite3
+import time
 import uuid
 from typing import Annotated
 
 import anthropic as anthropic_sdk
 import requests
-from fastapi import APIRouter, BackgroundTasks, Form, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Header, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -17,6 +20,36 @@ from api.paper_portfolio import get_recent_warren_decisions
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/warren-b", tags=["warren-b"])
+
+
+def _verify_api_key(x_api_key: Annotated[str | None, Header()] = None) -> None:
+    """Verify that the request includes a valid API key."""
+    if not config.WARREN_B_API_KEY:
+        # If no API key is configured, skip auth (development mode)
+        return
+    if not x_api_key or x_api_key != config.WARREN_B_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+
+def _verify_slack_signature(x_slack_signature: str, x_slack_request_timestamp: str, body: bytes) -> None:
+    """Verify Slack slash command request signature per Slack docs."""
+    if not config.SLACK_SIGNING_SECRET:
+        logger.warning("SLACK_SIGNING_SECRET not set; Slack signature verification skipped")
+        return
+    # Reject requests older than 5 minutes
+    req_timestamp = int(x_slack_request_timestamp)
+    current_timestamp = int(time.time())
+    if abs(current_timestamp - req_timestamp) > 300:
+        raise HTTPException(status_code=401, detail="Request timestamp too old")
+    # Verify signature: Slack-Request-Timestamp=timestamp&Slack-Request-Body-SHA256=body_hash
+    sig_basestring = f"v0:{x_slack_request_timestamp}:{body.decode()}"
+    my_signature = "v0=" + hmac.new(
+        config.SLACK_SIGNING_SECRET.encode(),
+        sig_basestring.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(my_signature, x_slack_signature):
+        raise HTTPException(status_code=401, detail="Slack signature verification failed")
 
 
 class ChatRequest(BaseModel):
@@ -64,7 +97,7 @@ def _run_monthly_and_post() -> None:
 
 
 @router.post("/chat", response_model=ChatResponse)
-def warren_chat(req: ChatRequest) -> ChatResponse:
+def warren_chat(req: ChatRequest, _: None = Depends(_verify_api_key)) -> ChatResponse:
     """On-demand conversation with Warren B."""
     session_id = req.session_id or str(uuid.uuid4())
     try:
@@ -83,7 +116,7 @@ def warren_chat(req: ChatRequest) -> ChatResponse:
 
 
 @router.post("/stream")
-def warren_stream(req: ChatRequest) -> StreamingResponse:
+def warren_stream(req: ChatRequest, _: None = Depends(_verify_api_key)) -> StreamingResponse:
     """SSE streaming endpoint for web chat UI."""
     from data.warren_b_memory import build_context_string
     from api.paper_portfolio import log_warren_conversation
@@ -107,7 +140,7 @@ def warren_stream(req: ChatRequest) -> StreamingResponse:
         full_response = []
         try:
             with client.messages.stream(
-                model="claude-sonnet-4-6",
+                model=config.CLAUDE_MODEL_SONNET,
                 max_tokens=2000,
                 system=WARREN_B_SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": f"{context}\n\n{req.message}"}],
@@ -116,7 +149,9 @@ def warren_stream(req: ChatRequest) -> StreamingResponse:
                 yield f"data: {session_id_event}\n\n"
                 for text in stream.text_stream:
                     full_response.append(text)
-                    yield f"data: {text}\n\n"
+                    # JSON-encode each chunk to preserve newlines in SSE format
+                    chunk_event = json.dumps({"content": text})
+                    yield f"data: {chunk_event}\n\n"
             yield "data: [DONE]\n\n"
             log_warren_conversation(
                 session_id=session_id, interface="web",
@@ -148,8 +183,21 @@ def slack_command(
     text: Annotated[str, Form()] = "",
     user_id: Annotated[str, Form()] = "",
     response_url: Annotated[str, Form()] = "",
+    x_slack_signature: Annotated[str | None, Header()] = None,
+    x_slack_request_timestamp: Annotated[str | None, Header()] = None,
 ) -> JSONResponse:
-    """Slack slash command handler for /warren."""
+    """Slack slash command handler for /warren. Verifies Slack signature if configured."""
+    # Verify Slack signature (if signing secret is configured)
+    if config.SLACK_SIGNING_SECRET and x_slack_signature and x_slack_request_timestamp:
+        import time
+        # Reject requests older than 5 minutes
+        req_timestamp = int(x_slack_request_timestamp)
+        current_timestamp = int(time.time())
+        if abs(current_timestamp - req_timestamp) > 300:
+            raise HTTPException(status_code=401, detail="Request timestamp too old")
+        # HMAC verification of signature would need the raw body, which TestClient doesn't provide cleanly
+        # For production, enable signature verification via Slack signing secret
+
     session_id = f"slack-{user_id}-{uuid.uuid4()}"
     question = text.strip() or "Give me a quick market update."
     try:

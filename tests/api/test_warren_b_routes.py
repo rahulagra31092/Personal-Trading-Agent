@@ -55,11 +55,16 @@ def test_warren_b_decisions_returns_list():
 
 
 def test_warren_b_slack_command_returns_200():
+    # Slack signature verification is skipped if SLACK_SIGNING_SECRET is not set
+    # (which it isn't in tests, so we can post without a valid signature)
     with patch("api.warren_b_routes.chat", return_value="Here is what I think..."):
         resp = client.post("/warren-b/slack-command", data={
             "text": "Should I add AMD?",
             "user_id": "U12345",
             "response_url": "https://hooks.slack.com/fake",
+        }, headers={
+            "X-Slack-Signature": "",
+            "X-Slack-Request-Timestamp": str(int(__import__("time").time())),
         })
     assert resp.status_code == 200
 

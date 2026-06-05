@@ -23,6 +23,12 @@ SCHWAB_CLIENT_ID: str | None = os.environ.get("SCHWAB_CLIENT_ID") or None
 SCHWAB_CLIENT_SECRET: str | None = os.environ.get("SCHWAB_CLIENT_SECRET") or None
 QUIVER_API_KEY: str | None = os.environ.get("QUIVER_API_KEY") or None
 GOOGLE_SHEET_ID: str | None = os.environ.get("GOOGLE_SHEET_ID") or None
+SLACK_SIGNING_SECRET: str | None = os.environ.get("SLACK_SIGNING_SECRET") or None
+WARREN_B_API_KEY: str | None = os.environ.get("WARREN_B_API_KEY") or None
+
+# Model IDs — centralized to prevent version mismatches
+CLAUDE_MODEL_SONNET = "claude-sonnet-4-6-20250514"
+CLAUDE_MODEL_HAIKU = "claude-3-5-haiku-20241022"
 
 EXCLUDED_TICKERS: frozenset[str] = frozenset()
 

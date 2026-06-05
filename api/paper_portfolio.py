@@ -122,8 +122,10 @@ def init_paper_db() -> None:
 
 def _conn() -> sqlite3.Connection:
     PAPER_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(PAPER_DB_PATH)
+    con = sqlite3.connect(PAPER_DB_PATH, timeout=5.0)
     con.row_factory = sqlite3.Row
+    con.execute("PRAGMA journal_mode=WAL")
+    con.execute("PRAGMA busy_timeout=5000")
     return con
 
 
