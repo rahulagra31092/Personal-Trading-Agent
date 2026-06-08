@@ -19,7 +19,6 @@ from quant.quality import compute_quality_score
 from quant.regime import get_market_regime
 from quant.sector import apply_concentration_cap
 from smart_money.congress import compute_congress_score
-from smart_money.news_scorer import compute_news_score
 from smart_money.earnings_scorer import compute_earnings_score
 from data.news import prefetch_sector_news
 

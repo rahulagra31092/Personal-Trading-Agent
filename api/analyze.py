@@ -13,11 +13,11 @@ from quant.confidence import run_monte_carlo
 from quant.trade_setup import compute_trade_setup
 from smart_money.insider_trades import compute_insider_trades_score
 from smart_money.estimate_revisions import compute_estimate_revision_score
-from smart_money.news_scorer import compute_news_score
 from smart_money.earnings_scorer import compute_earnings_score
 from quant.regime import get_market_regime, get_regime_weights
 from util.data_health import record_fetch, get_health_report, get_staleness_warnings
 from util.circuit_breaker import record_failure, record_success, should_generate_signals
+from util.trading_state import get_trading_state
 import config
 
 logger = logging.getLogger(__name__)
@@ -45,6 +45,14 @@ def analyze_ticker(ticker: str) -> dict:
         raise HTTPException(
             status_code=503,
             detail="Data quality degraded — circuit breaker is OPEN. Retry in 5 minutes."
+        )
+
+    # Check if trading circuit breaker is open (daily loss limit)
+    trading_state = get_trading_state()
+    if trading_state.is_circuit_breaker_open():
+        raise HTTPException(
+            status_code=503,
+            detail=f"Trading circuit breaker is OPEN. Daily loss: {trading_state.daily_loss_pct:.2%}, Consecutive losses: {trading_state.consecutive_losses}"
         )
 
     ticker = ticker.strip().upper()
@@ -168,6 +176,7 @@ def analyze_ticker(ticker: str) -> dict:
             "staleness_warnings": health["staleness_warnings"],
             "is_healthy": health["is_healthy"],
         },
+        "trading_state": trading_state.to_dict(),
     }
 
     # Recursively sanitize all float values

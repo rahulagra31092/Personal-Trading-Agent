@@ -17,7 +17,6 @@ from quant.signals import compute_signal
 from quant.confidence import run_monte_carlo
 from quant.trade_setup import compute_trade_setup
 from smart_money.congress import compute_congress_score
-from smart_money.news_scorer import compute_news_score
 from smart_money.earnings_scorer import compute_earnings_score
 
 # -- Config ---------------------------------------------------------------------

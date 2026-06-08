@@ -9,6 +9,7 @@ from api.analyze import router as analyze_router
 from api.portfolio import router as portfolio_router
 from api.warren_b_routes import router as warren_b_router
 from api.health import router as health_router
+from util.trading_state import get_trading_state, reset_daily_state
 
 logger = logging.getLogger(__name__)
 
@@ -54,3 +55,21 @@ def trigger_monthly_briefing(background_tasks: BackgroundTasks) -> JSONResponse:
     """Kick off the monthly briefing in the background. Returns 202 immediately."""
     background_tasks.add_task(_run_monthly)
     return JSONResponse(status_code=202, content={"status": "accepted", "mode": "monthly"})
+
+
+@app.get("/control/circuit-breaker")
+def get_circuit_breaker_status():
+    """Get current circuit breaker status and daily trading state."""
+    state = get_trading_state()
+    return state.to_dict()
+
+
+@app.post("/control/circuit-breaker/reset")
+def reset_circuit_breaker():
+    """Reset daily circuit breaker state (call at market open)."""
+    reset_daily_state()
+    state = get_trading_state()
+    return {
+        "status": "reset",
+        "state": state.to_dict(),
+    }

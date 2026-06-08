@@ -64,7 +64,6 @@ def test_analyze_returns_required_keys():
          patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_insider_trades_score", return_value=0.5), \
-         patch("api.analyze.compute_news_score", return_value=0.5), \
          patch("api.analyze.compute_earnings_score", return_value=0.5), \
          patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/AAPL")
@@ -89,7 +88,6 @@ def test_analyze_signal_has_label():
          patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_insider_trades_score", return_value=0.5), \
-         patch("api.analyze.compute_news_score", return_value=0.5), \
          patch("api.analyze.compute_earnings_score", return_value=0.5), \
          patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/MSFT")
@@ -104,7 +102,6 @@ def test_analyze_confidence_has_prob_success():
          patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_insider_trades_score", return_value=0.5), \
-         patch("api.analyze.compute_news_score", return_value=0.5), \
          patch("api.analyze.compute_earnings_score", return_value=0.5), \
          patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/NVDA")
@@ -145,7 +142,6 @@ def test_analyze_trade_card_present():
          patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_insider_trades_score", return_value=0.5), \
-         patch("api.analyze.compute_news_score", return_value=0.5), \
          patch("api.analyze.compute_earnings_score", return_value=0.5), \
          patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/AAPL")
@@ -164,7 +160,6 @@ def test_analyze_trend_regime_present():
          patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_insider_trades_score", return_value=0.5), \
-         patch("api.analyze.compute_news_score", return_value=0.5), \
          patch("api.analyze.compute_earnings_score", return_value=0.5), \
          patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/AAPL")
@@ -181,7 +176,6 @@ def test_analyze_trade_card_rr_ratio():
          patch("api.analyze.compute_quality_score", return_value=0.5), \
          patch("api.analyze.run_monte_carlo", return_value=_FAKE_MC), \
          patch("api.analyze.compute_insider_trades_score", return_value=0.5), \
-         patch("api.analyze.compute_news_score", return_value=0.5), \
          patch("api.analyze.compute_earnings_score", return_value=0.5), \
          patch("api.analyze.compute_trade_setup", return_value=_FAKE_TRADE_CARD):
         resp = client.get("/analyze/AAPL")

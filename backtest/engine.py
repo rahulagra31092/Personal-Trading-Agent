@@ -309,10 +309,35 @@ def run_backtest(ticker: str, start_date: str, end_date: str) -> BacktestRun:
                 weights=regime_weights,
             )
 
+            # Log all component scores and composite score for diagnostics
+            logger.debug(
+                "%s %s | composite=%.4f | technical=%.4f | momentum=%.4f | quality=%.4f | insider=%.4f | estimate=%.4f | earnings=%.4f",
+                ticker, date_str,
+                sig["composite_score"],
+                ind.get("technical_score", 0.5),
+                momentum_score,
+                quality_score,
+                insider_score,
+                estimate_score,
+                earnings_score,
+            )
+
             backtest.add_daily_signal(date_str, sig)
 
             # Entry logic: BUY only if no open trades and high conviction
             if not open_trades and sig["composite_score"] > 0.65:
+                # Log entry trigger
+                logger.debug(
+                    "%s %s | BUY signal at %.4f > 0.65 threshold | position_size=%.4f",
+                    ticker, date_str, sig["composite_score"],
+                    sig.get("position_size", 0.0)
+                )
+            elif not open_trades and sig["composite_score"] <= 0.65:
+                # Log signal rejection
+                logger.debug(
+                    "%s %s | Skipped entry at %.4f < 0.65 threshold",
+                    ticker, date_str, sig["composite_score"]
+                )
                 # Trade setup
                 trade_setup = compute_trade_setup(
                     close_price,

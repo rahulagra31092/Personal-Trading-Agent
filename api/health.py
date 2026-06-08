@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from util.data_health import get_health_report
 from util.circuit_breaker import get_circuit_breaker_state
+from util.trading_state import get_trading_state
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ def get_health():
 
         # Get circuit breaker state
         cb_state = get_circuit_breaker_state()
+        trading_state = get_trading_state()
 
         return {
             "status": "ok",
@@ -47,6 +49,12 @@ def get_health():
                 "state": cb_state.get("state", "UNKNOWN"),
                 "failure_count": cb_state.get("failure_count", 0),
                 "last_transition": cb_state.get("last_transition"),
+            },
+            "trading_state": {
+                "daily_pnl": trading_state.daily_pnl,
+                "daily_loss_pct": trading_state.daily_loss_pct,
+                "consecutive_losses": trading_state.consecutive_losses,
+                "circuit_breaker_open": trading_state.is_circuit_breaker_open(),
             },
             "data_health": {
                 "sources_healthy": healthy_count,

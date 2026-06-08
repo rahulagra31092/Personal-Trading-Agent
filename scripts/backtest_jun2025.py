@@ -22,7 +22,6 @@ from quant.momentum import compute_momentum_score_from_bars
 from quant.quality import compute_quality_score
 from quant.sector import apply_concentration_cap
 from smart_money.congress import compute_congress_score
-from smart_money.news_scorer import compute_news_score
 from data.earnings import get_earnings_calendar
 
 # ── Constants ──────────────────────────────────────────────────────────────────

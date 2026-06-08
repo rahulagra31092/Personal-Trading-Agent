@@ -279,7 +279,6 @@ class TestPositionSizingConfidence:
                         with patch("api.analyze.compute_quality_score"):
                             with patch("api.analyze.compute_insider_trades_score"):
                                 with patch("api.analyze.compute_estimate_revision_score"):
-                                    with patch("api.analyze.compute_news_score"):
                                         with patch("api.analyze.compute_earnings_score"):
                                             with patch("api.analyze.compute_signal"):
                                                 with patch("api.analyze.run_monte_carlo") as mock_mc:
@@ -333,7 +332,6 @@ class TestDegradationScenarios:
                 with patch("api.analyze.compute_quality_score", return_value=0.5):
                     with patch("api.analyze.compute_insider_trades_score", return_value=0.5):
                         with patch("api.analyze.compute_estimate_revision_score", return_value=0.5):
-                            with patch("api.analyze.compute_news_score", return_value=0.5):
                                 with patch("api.analyze.compute_earnings_score", return_value=0.5):
                                     with patch("api.analyze.compute_indicators") as mock_ind:
                                         mock_ind.return_value = {
@@ -382,7 +380,6 @@ class TestDegradationScenarios:
                         with patch("api.analyze.compute_quality_score", return_value=0.5):
                             with patch("api.analyze.compute_insider_trades_score", return_value=0.5):
                                 with patch("api.analyze.compute_estimate_revision_score", return_value=0.5):
-                                    with patch("api.analyze.compute_news_score", return_value=0.5):
                                         with patch("api.analyze.compute_earnings_score", return_value=0.5):
                                             with patch("api.analyze.compute_signal") as mock_sig:
                                                 mock_sig.return_value = {"composite_score": 0.5, "label": "WATCH"}
