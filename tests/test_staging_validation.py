@@ -277,7 +277,7 @@ class TestPositionSizingConfidence:
                 with patch("api.analyze.compute_garch_volatility"):
                     with patch("api.analyze.compute_momentum_score"):
                         with patch("api.analyze.compute_quality_score"):
-                            with patch("api.analyze.compute_congress_score"):
+                            with patch("api.analyze.compute_insider_trades_score"):
                                 with patch("api.analyze.compute_estimate_revision_score"):
                                     with patch("api.analyze.compute_news_score"):
                                         with patch("api.analyze.compute_earnings_score"):
@@ -331,7 +331,7 @@ class TestDegradationScenarios:
 
             with patch("api.analyze.compute_momentum_score", return_value=0.5):
                 with patch("api.analyze.compute_quality_score", return_value=0.5):
-                    with patch("api.analyze.compute_congress_score", return_value=0.5):
+                    with patch("api.analyze.compute_insider_trades_score", return_value=0.5):
                         with patch("api.analyze.compute_estimate_revision_score", return_value=0.5):
                             with patch("api.analyze.compute_news_score", return_value=0.5):
                                 with patch("api.analyze.compute_earnings_score", return_value=0.5):
@@ -380,7 +380,7 @@ class TestDegradationScenarios:
                     }
                     with patch("api.analyze.compute_momentum_score", return_value=0.5):
                         with patch("api.analyze.compute_quality_score", return_value=0.5):
-                            with patch("api.analyze.compute_congress_score", return_value=0.5):
+                            with patch("api.analyze.compute_insider_trades_score", return_value=0.5):
                                 with patch("api.analyze.compute_estimate_revision_score", return_value=0.5):
                                     with patch("api.analyze.compute_news_score", return_value=0.5):
                                         with patch("api.analyze.compute_earnings_score", return_value=0.5):

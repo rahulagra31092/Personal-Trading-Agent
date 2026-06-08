@@ -5,7 +5,7 @@ def compute_signal(
     technical_score: float,
     momentum_score: float = 0.5,
     quality_score: float = 0.5,
-    congress_score: float = 0.5,
+    insider_trades_score: float = 0.5,
     estimate_revisions_score: float = 0.5,
     earnings_score: float = 0.5,
     weights: dict[str, float] | None = None,
@@ -15,7 +15,7 @@ def compute_signal(
         w["technical"] * technical_score
         + w["momentum"] * momentum_score
         + w["quality"] * quality_score
-        + w["congress"] * congress_score
+        + w["insider_trades"] * insider_trades_score
         + w["estimate_revisions"] * estimate_revisions_score
         + w["earnings"] * earnings_score,
         4,
@@ -35,7 +35,7 @@ def compute_signal(
             "technical": technical_score,
             "momentum": momentum_score,
             "quality": quality_score,
-            "congress": congress_score,
+            "insider_trades": insider_trades_score,
             "estimate_revisions": estimate_revisions_score,
             "earnings": earnings_score,
         },

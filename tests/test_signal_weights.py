@@ -9,8 +9,8 @@ def test_news_removed_from_weights():
     import config
     assert "news_reaction" not in config.SIGNAL_WEIGHTS
 
-    # Remaining weights (technical, momentum, quality, congress, estimate_revisions, earnings)
-    expected_weights = {"technical", "momentum", "quality", "congress", "estimate_revisions", "earnings"}
+    # Remaining weights (technical, momentum, quality, insider_trades, estimate_revisions, earnings)
+    expected_weights = {"technical", "momentum", "quality", "insider_trades", "estimate_revisions", "earnings"}
     assert set(config.SIGNAL_WEIGHTS.keys()) == expected_weights
 
 

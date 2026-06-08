@@ -41,9 +41,9 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     "technical": 0.15,
     "momentum": 0.30,
     "quality": 0.18,        # Increased from 0.15 (gained 3% from removed news)
-    "congress": 0.08,
+    "insider_trades": 0.07,
     "estimate_revisions": 0.07,
-    "earnings": 0.22,       # Increased from 0.15 (gained 7% from removed news)
+    "earnings": 0.23,       # Increased from 0.15 (gained 7% from removed news)
 }
 assert abs(sum(SIGNAL_WEIGHTS.values()) - 1.0) < 1e-9, (
     f"SIGNAL_WEIGHTS must sum to 1.0, got {sum(SIGNAL_WEIGHTS.values())}"
@@ -59,20 +59,20 @@ assert abs(sum(SIGNAL_WEIGHTS.values()) - 1.0) < 1e-9, (
 REGIME_WEIGHTS: dict[str, dict[str, float]] = {
     "low_vol": {          # VIX < 15 — bull market, momentum heavily rewarded
         "technical": 0.13, "momentum": 0.37, "quality": 0.12,
-        "congress": 0.08, "estimate_revisions": 0.07, "earnings": 0.23,  # Increased from 0.15
+        "insider_trades": 0.07, "estimate_revisions": 0.07, "earnings": 0.24,  # Adjusted from congress 0.08
     },
     "normal": SIGNAL_WEIGHTS,  # VIX 15-20 — baseline weights
     "elevated": {         # VIX 20-25 — momentum falters, quality/earnings take over
         "technical": 0.10, "momentum": 0.23, "quality": 0.22,
-        "congress": 0.08, "estimate_revisions": 0.07, "earnings": 0.30,  # Increased from 0.20
+        "insider_trades": 0.07, "estimate_revisions": 0.07, "earnings": 0.31,  # Adjusted from congress 0.08
     },
     "high": {             # VIX 25-30 — preserve capital; quality + earnings dominate
         "technical": 0.08, "momentum": 0.12, "quality": 0.28,
-        "congress": 0.07, "estimate_revisions": 0.05, "earnings": 0.40,  # Increased from 0.30
+        "insider_trades": 0.06, "estimate_revisions": 0.05, "earnings": 0.41,  # Adjusted from congress 0.07
     },
     "crisis": {           # VIX >= 30 — extreme stress; cash is valid
         "technical": 0.06, "momentum": 0.10, "quality": 0.32,
-        "congress": 0.05, "estimate_revisions": 0.05, "earnings": 0.42,  # Increased from 0.32
+        "insider_trades": 0.04, "estimate_revisions": 0.05, "earnings": 0.43,  # Adjusted from congress 0.05
     },
 }
 for _regime, _w in REGIME_WEIGHTS.items():

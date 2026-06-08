@@ -11,7 +11,7 @@ from quant.quality import compute_quality_score
 from quant.signals import compute_signal
 from quant.confidence import run_monte_carlo
 from quant.trade_setup import compute_trade_setup
-from smart_money.congress import compute_congress_score
+from smart_money.insider_trades import compute_insider_trades_score
 from smart_money.estimate_revisions import compute_estimate_revision_score
 from smart_money.news_scorer import compute_news_score
 from smart_money.earnings_scorer import compute_earnings_score
@@ -79,7 +79,7 @@ def analyze_ticker(ticker: str) -> dict:
 
     momentum_score = compute_momentum_score(ticker)
     quality_score = compute_quality_score(ticker)
-    congress_score = compute_congress_score(ticker)
+    insider_score = compute_insider_trades_score(ticker)
     estimate_revisions_score = compute_estimate_revision_score(ticker)
     earnings_score = compute_earnings_score(ticker)
 
@@ -90,7 +90,7 @@ def analyze_ticker(ticker: str) -> dict:
         technical_score=ind["technical_score"],
         momentum_score=momentum_score,
         quality_score=quality_score,
-        congress_score=congress_score,
+        insider_trades_score=insider_score,
         estimate_revisions_score=estimate_revisions_score,
         earnings_score=earnings_score,
         weights=regime_weights,
