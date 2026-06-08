@@ -44,17 +44,14 @@ def run_walk_forward_backtest(
     }
     """
     try:
-        # Calculate date ranges (going back from today)
-        today = datetime.now(_ET)
-        test_end = today - timedelta(days=30)  # 30 days ago (use historical data)
-        test_start = test_end - timedelta(days=365 * test_years)
-        train_end = test_start - timedelta(days=1)
-        train_start = train_end - timedelta(days=365 * train_years)
-
-        train_start_str = train_start.strftime("%Y-%m-%d")
-        train_end_str = train_end.strftime("%Y-%m-%d")
-        test_start_str = test_start.strftime("%Y-%m-%d")
-        test_end_str = test_end.strftime("%Y-%m-%d")
+        # Use actual available data range
+        # We have data from June 10, 2025 to June 8, 2026
+        # Backtest on the 1-year available period (June 2025 to June 2026)
+        # This validates the model on actual recent market data
+        train_start_str = "2025-06-10"
+        train_end_str = "2025-12-31"
+        test_start_str = "2026-01-01"
+        test_end_str = "2026-06-08"
 
         logger.info(
             "Walk-forward backtest for %s: train %s→%s, test %s→%s",

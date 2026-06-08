@@ -4,8 +4,15 @@ Main entry point for backtest execution.
 """
 import logging
 import json
+import sys
+import io
 from backtest.runner import run_portfolio_backtest
 from backtest.report import format_backtest_report, save_backtest_report
+
+# Set UTF-8 encoding for console output on Windows
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

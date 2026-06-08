@@ -176,6 +176,8 @@ def run_backtest(ticker: str, start_date: str, end_date: str) -> BacktestRun:
        e. If bar hits stop or target: Close position
     3. Calculate metrics
     """
+    from datetime import datetime as dt
+
     ticker = ticker.strip().upper()
     backtest = BacktestRun(ticker, start_date, end_date)
 
@@ -189,12 +191,26 @@ def run_backtest(ticker: str, start_date: str, end_date: str) -> BacktestRun:
         logger.warning("Insufficient history for %s: %d bars", ticker, len(bars))
         return backtest
 
-    # Filter to date range
-    # Bars may have 't' or 'date' field depending on source
-    bars = [
-        b for b in bars
-        if start_date <= (b.get("date", b.get("t", ""))[:10] if isinstance(b.get("date", b.get("t")), str) else "") <= end_date
-    ]
+    # Convert start/end dates to comparable format
+    start_dt = dt.strptime(start_date, "%Y-%m-%d")
+    end_dt = dt.strptime(end_date, "%Y-%m-%d")
+
+    # Filter to date range - handle both 't' (unix timestamp) and 'date' (string)
+    filtered_bars = []
+    for bar in bars:
+        if "t" in bar:  # Unix timestamp in milliseconds
+            bar_dt = dt.fromtimestamp(bar["t"] / 1000)
+            bar_date_str = bar_dt.strftime("%Y-%m-%d")
+        elif "date" in bar:
+            bar_date_str = bar["date"][:10]
+            bar_dt = dt.strptime(bar_date_str, "%Y-%m-%d")
+        else:
+            continue
+
+        if start_dt <= bar_dt <= end_dt:
+            filtered_bars.append((bar, bar_date_str))
+
+    bars = filtered_bars
 
     if not bars:
         logger.warning("No bars in range %s-%s for %s", start_date, end_date, ticker)
@@ -202,14 +218,8 @@ def run_backtest(ticker: str, start_date: str, end_date: str) -> BacktestRun:
 
     open_trades: list[BacktestTrade] = []
 
-    for i, bar in enumerate(bars):
-        # Extract date from bar (handle both 't' and 'date' fields)
-        date_str = bar.get("date", bar.get("t", ""))
-        if isinstance(date_str, str):
-            date_str = date_str[:10]
-        else:
-            continue
-
+    for i, (bar, date_str) in enumerate(bars):
+        # date_str is already extracted above
         close_price = float(bar.get("c", bar.get("close", 0)))
 
         # Check if open trades hit stop/target
@@ -239,8 +249,9 @@ def run_backtest(ticker: str, start_date: str, end_date: str) -> BacktestRun:
 
         # Compute signals for this date
         try:
-            # Get indicators
-            recent_bars = bars[max(0, i-60):i+1]
+            # Get indicators (extract actual bar dicts from tuples)
+            recent_bars_tuples = bars[max(0, i-60):i+1]
+            recent_bars = [b[0] for b in recent_bars_tuples]  # Extract bar dict from (bar, date_str) tuple
             if len(recent_bars) < 20:
                 continue
 
@@ -327,10 +338,9 @@ def run_backtest(ticker: str, start_date: str, end_date: str) -> BacktestRun:
 
     # Close any remaining open trades at last bar
     if bars:
-        last_bar = bars[-1]
-        last_date = last_bar.get("date", last_bar.get("t", ""))
-        if isinstance(last_date, str):
-            last_date = last_date[:10]
+        last_bar_tuple = bars[-1]
+        last_bar = last_bar_tuple[0]  # Extract bar dict from tuple
+        last_date = last_bar_tuple[1]  # Extract date string from tuple
         last_price = float(last_bar.get("c", last_bar.get("close", 0)))
         for trade in open_trades:
             trade.close(last_date, last_price, "timeout")
