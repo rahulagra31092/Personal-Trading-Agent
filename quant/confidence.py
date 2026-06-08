@@ -1,4 +1,18 @@
-import numpy as np
+"""
+DEPRECATED: Monte Carlo confidence removed.
+
+Previous implementation (zero-drift GBM) always returned ~50% prob_success.
+This was a coin flip and provided zero signal for position sizing.
+
+Position sizing now uses signal conviction (composite_score distance from threshold)
+instead. See quant/conviction_sizing.py for details.
+
+Keeping this module for backwards compatibility but run_monte_carlo() now
+returns a warning and dummy data.
+"""
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def run_monte_carlo(
@@ -8,24 +22,27 @@ def run_monte_carlo(
     simulations: int = 1_000,
     seed: int | None = None,
 ) -> dict:
-    if daily_vol <= 0:
-        raise ValueError(f"daily_vol must be positive, got {daily_vol}")
-    rng = np.random.default_rng(seed)
-    # GBM with zero drift: log-returns ~ N(0, daily_vol)
-    log_returns = rng.normal(0.0, daily_vol, size=(simulations, days))
-    final_prices = current_price * np.exp(np.cumsum(log_returns, axis=1)[:, -1])
+    """
+    DEPRECATED: Use quant/conviction_sizing.py instead.
 
-    base_target = float(np.median(final_prices))
-    lower_80 = float(np.percentile(final_prices, 10))
-    upper_80 = float(np.percentile(final_prices, 90))
-    prob_success = float(np.mean(final_prices > current_price))
+    This function is kept for backwards compatibility but no longer used
+    in position sizing. The previous implementation used zero-drift GBM
+    which always returned ~50% prob_success (a coin flip with no signal).
 
+    Now returns dummy values. Position sizing uses signal conviction instead.
+    """
+    logger.warning(
+        "run_monte_carlo() called but is deprecated. "
+        "Position sizing now uses signal conviction from quant/conviction_sizing.py"
+    )
+
+    # Dummy return for backwards compatibility
     return {
-        "base_target": round(base_target, 2),
-        "lower_80": round(lower_80, 2),
-        "upper_80": round(upper_80, 2),
-        "downside_pct": round((lower_80 - current_price) / current_price, 4),
-        "upside_pct": round((upper_80 - current_price) / current_price, 4),
-        "prob_success": round(prob_success, 4),
+        "base_target": round(current_price * 1.01, 2),
+        "lower_80": round(current_price * 0.98, 2),
+        "upper_80": round(current_price * 1.04, 2),
+        "downside_pct": -0.02,
+        "upside_pct": 0.04,
+        "prob_success": 0.5,  # Dummy coin flip
         "daily_vol_expected": round(daily_vol, 6),
     }
