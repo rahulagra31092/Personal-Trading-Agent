@@ -1,8 +1,13 @@
 import yfinance as yf
 import pandas as pd
-from datetime import date, datetime  # date kept for days_to_earnings arithmetic
+from datetime import date, datetime, timedelta, timezone  # date kept for days_to_earnings arithmetic
 from zoneinfo import ZoneInfo
 from data.cache import get_cache, set_cache
+from util.timeout import timeout
+from util.data_health import record_fetch
+import logging
+
+logger = logging.getLogger(__name__)
 
 _ET = ZoneInfo("America/New_York")
 
@@ -75,3 +80,69 @@ def _calculate_eps_stats(ticker_obj: yf.Ticker) -> dict:
         }
     except Exception:
         return base
+
+
+@timeout(15, default=[])
+def get_earnings_calendar_history(ticker: str, years: int = 3) -> list[dict]:
+    """
+    Fetch historical earnings dates from yfinance (past 3 years).
+
+    This returns past earnings announcement dates for backtesting.
+    yfinance's Ticker.earnings_dates is a pandas DataFrame with:
+    - Index: date of earnings announcement
+    - Columns: EPS estimate, EPS actual, surprise %
+    """
+    ticker = ticker.strip().upper()
+    cache_key = f"earnings_history:{ticker}:{years}"
+    cached = get_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        t = yf.Ticker(ticker)
+        earnings_df = t.earnings_dates  # pandas DataFrame
+
+        if earnings_df is None or earnings_df.empty:
+            logger.debug("No earnings history for %s", ticker)
+            record_fetch("earnings_calendar", success=True)
+            return []
+
+        # Convert DataFrame to list of dicts
+        earnings = []
+        cutoff = datetime.now(timezone.utc) - timedelta(days=365 * years)
+
+        for date_idx, row in earnings_df.iterrows():
+            try:
+                # Handle pandas Timestamp
+                if hasattr(date_idx, 'to_pydatetime'):
+                    parsed_date = date_idx.to_pydatetime()
+                else:
+                    parsed_date = date_idx
+
+                # Compare dates properly
+                if hasattr(parsed_date, 'replace'):
+                    if parsed_date.tzinfo is None:
+                        parsed_date = parsed_date.replace(tzinfo=timezone.utc)
+                    if parsed_date < cutoff:
+                        continue
+                else:
+                    continue
+
+                earnings.append({
+                    "date": parsed_date.isoformat() if hasattr(parsed_date, "isoformat") else str(parsed_date),
+                    "eps_estimate": float(row.get("Estimated Earnings", 0)) if row.get("Estimated Earnings") else None,
+                    "eps_actual": float(row.get("Reported Earnings", 0)) if row.get("Reported Earnings") else None,
+                    "surprise_pct": float(row.get("Surprise(%)", 0)) if row.get("Surprise(%)") else None,
+                })
+            except Exception as e:
+                logger.debug("Failed to parse earnings row: %s", e)
+                continue
+
+        record_fetch("earnings_calendar", success=True)
+        set_cache(cache_key, earnings, ttl_seconds=604800)  # 7-day cache for history
+        return earnings
+
+    except Exception as exc:
+        logger.warning("Earnings history fetch failed for %s: %s", ticker, exc)
+        record_fetch("earnings_calendar", success=False)
+        return []
