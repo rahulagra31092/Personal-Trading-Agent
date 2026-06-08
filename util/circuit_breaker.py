@@ -182,3 +182,13 @@ def get_status() -> dict:
 def reset() -> None:
     """Reset circuit breaker (for testing)."""
     _breaker.reset()
+
+
+def get_circuit_breaker_state() -> dict:
+    """Get circuit breaker state for monitoring (alias for get_status)."""
+    status = get_status()
+    return {
+        "state": status["state"],
+        "failure_count": status["failure_count"],
+        "last_transition": status.get("last_failure_time"),
+    }

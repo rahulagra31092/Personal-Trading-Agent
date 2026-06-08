@@ -4,10 +4,12 @@ import pandas as pd
 import yfinance as yf
 
 from data.cache import get_cache, set_cache
+from util.timeout import timeout
+from util.data_health import record_fetch
 
 logger = logging.getLogger(__name__)
 
-_CACHE_TTL = 86400  # 24h — analyst revisions change slowly
+_CACHE_TTL = 21600  # 6h — analyst revisions change during trading day
 
 _UPGRADE_WORDS = frozenset({"buy", "outperform", "overweight", "strong buy", "accumulate", "positive"})
 _DOWNGRADE_WORDS = frozenset({"sell", "underperform", "underweight", "strong sell", "reduce", "negative"})
@@ -66,17 +68,19 @@ def _score_from_rec_mean(info: dict) -> Optional[float]:
     return round(min(1.0, max(0.0, (5.0 - float(rec_mean)) / 4.0)), 4)
 
 
+@timeout(15, default=0.5)
 def compute_estimate_revision_score(ticker: str) -> float:
     """
     Analyst estimate revision signal [0, 1].
     Primary: net analyst grade changes (upgrades vs downgrades) in last 30 days.
     Fallback: consensus recommendation mean from yfinance info.
     Returns 0.5 (neutral) when data is unavailable.
-    Cached 24h.
+    Cached 6h.
     """
     cache_key = f"est_revision:{ticker}"
     cached = get_cache(cache_key)
     if cached is not None:
+        record_fetch("estimate_revisions", success=True)
         return float(cached)
 
     try:
@@ -90,8 +94,10 @@ def compute_estimate_revision_score(ticker: str) -> float:
             result = rec_score if rec_score is not None else 0.5
 
         set_cache(cache_key, result, ttl_seconds=_CACHE_TTL)
+        record_fetch("estimate_revisions", success=True)
         return result
 
     except Exception as exc:
         logger.warning("Estimate revision score failed for %s: %s", ticker, exc, exc_info=True)
+        record_fetch("estimate_revisions", success=False)
         return 0.5

@@ -3,6 +3,8 @@ import logging
 from datetime import datetime, timezone
 
 from data.news import get_ticker_news
+from util.timeout import timeout
+from util.data_health import record_fetch
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +140,7 @@ def _recency_weight(published_at: str) -> float:
         return 0.75
 
 
+@timeout(10, default=0.5)
 def compute_news_score(ticker: str, days: int = 3) -> float:
     """
     Sentiment score [0, 1] from recent ticker news.
@@ -147,8 +150,10 @@ def compute_news_score(ticker: str, days: int = 3) -> float:
     """
     try:
         articles = get_ticker_news(ticker, days=days)
+        record_fetch("news_api", success=True)
     except Exception as exc:
         logger.warning("News fetch failed for %s: %s", ticker, exc)
+        record_fetch("news_api", success=False)
         return 0.5
 
     if not articles:

@@ -99,7 +99,12 @@ def analyze_ticker(ticker: str) -> dict:
     )
 
     mc = run_monte_carlo(current_price, max(garch["daily_vol"], 0.001))
-    trade_card = compute_trade_setup(current_price, ind["atr_stop"])
+
+    # Extract probability of success from Monte Carlo simulation
+    prob_success = mc.get("prob_success", 0.5)
+
+    # Pass confidence to position sizing (adjusted by regime factor in paper trading)
+    trade_card = compute_trade_setup(current_price, ind["atr_stop"], prob_success=prob_success)
 
     # Sanitize for JSON: convert inf/nan to None
     def sanitize_for_json(obj):

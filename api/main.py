@@ -8,6 +8,7 @@ from data.cache import init_db
 from api.analyze import router as analyze_router
 from api.portfolio import router as portfolio_router
 from api.warren_b_routes import router as warren_b_router
+from api.health import router as health_router
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +23,7 @@ app = FastAPI(title="Trading Analyst API", version="1.0.0", lifespan=lifespan)
 app.include_router(analyze_router)
 app.include_router(portfolio_router)
 app.include_router(warren_b_router)
-
-
-@app.get("/health")
-def health() -> dict:
-    return {"status": "ok"}
+app.include_router(health_router)
 
 
 def _run_daily() -> None:
