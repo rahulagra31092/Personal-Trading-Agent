@@ -86,16 +86,26 @@ def compute_indicators(bars: list[dict], spy_return_3m: float | None = None) -> 
 
 
 def _rsi_score(rsi_val: float) -> float:
-    """4-zone RSI: sweet spot 55-80 = 1.0, exhaustion >80 = 0.3, bearish <35 = 0.0."""
-    if rsi_val >= 80:
-        return 0.3
-    if rsi_val >= 55:
-        return 1.0
-    if rsi_val >= 45:
-        return 0.5
-    if rsi_val >= 35:
-        return 0.15
-    return 0.0
+    """RSI scoring with proper overbought/oversold weighting.
+
+    RSI <=30 = oversold, reversal potential = 0.9
+    RSI 30-45 = weak = 0.4
+    RSI 45-55 = neutral = 0.5
+    RSI 55-70 = strong uptrend = 0.7
+    RSI 70-80 = overbought, mean reversion risk = 0.4
+    RSI >80 = extremely overbought, avoid = 0.2
+    """
+    if rsi_val <= 30:
+        return 0.9    # Oversold, strong bullish reversal signal
+    if rsi_val < 45:
+        return 0.4    # Weak trend
+    if rsi_val < 55:
+        return 0.5    # Neutral, balanced
+    if rsi_val < 70:
+        return 0.7    # Strong bullish trend
+    if rsi_val < 80:
+        return 0.4    # Overbought, mean reversion risk
+    return 0.2        # Extremely overbought, avoid
 
 
 def _macd_score(histogram: float, price: float) -> float:

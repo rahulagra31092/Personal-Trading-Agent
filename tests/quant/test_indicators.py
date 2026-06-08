@@ -123,11 +123,13 @@ def test_outperforming_spy_boosts_score():
 # ---------------------------------------------------------------------------
 
 def test_rsi_score_sweet_spot():
-    assert _rsi_score(65.0) == 1.0
+    # RSI 55-70 = strong uptrend = 0.7
+    assert _rsi_score(65.0) == 0.7
 
 
 def test_rsi_score_exhaustion():
-    assert _rsi_score(82.0) == pytest.approx(0.3)
+    # RSI >80 = extremely overbought = 0.2
+    assert _rsi_score(82.0) == pytest.approx(0.2)
 
 
 def test_rsi_score_neutral():
@@ -135,18 +137,22 @@ def test_rsi_score_neutral():
 
 
 def test_rsi_score_weak():
-    assert _rsi_score(38.0) == pytest.approx(0.15)
+    # RSI 30-45 = weak = 0.4
+    assert _rsi_score(38.0) == pytest.approx(0.4)
 
 
 def test_rsi_score_bearish():
-    assert _rsi_score(25.0) == 0.0
+    # RSI <=30 = oversold = 0.9
+    assert _rsi_score(25.0) == 0.9
 
 
 def test_rsi_score_boundary_55():
-    assert _rsi_score(55.0) == 1.0
+    # RSI 55-70 = strong uptrend = 0.7
+    assert _rsi_score(55.0) == 0.7
 
 
 def test_rsi_score_boundary_45():
+    # RSI 45-55 = neutral = 0.5
     assert _rsi_score(45.0) == pytest.approx(0.5)
 
 
@@ -292,3 +298,21 @@ def test_atr_modifier_neutral():
 
 def test_atr_modifier_zero_atr14_returns_one():
     assert _atr_modifier(0.5, 0.0, "bullish") == pytest.approx(1.0)
+
+
+def test_rsi_score_correctly_penalizes_overbought():
+    """RSI >70 should be low confidence due to mean reversion risk."""
+    assert _rsi_score(25) == 0.9   # Oversold = high conviction
+    assert _rsi_score(40) == 0.4   # Weak
+    assert _rsi_score(50) == 0.5   # Neutral
+    assert _rsi_score(60) == 0.7   # Strong bullish
+    assert _rsi_score(75) == 0.4   # Overbought = caution
+    assert _rsi_score(85) == 0.2   # Extremely overbought = avoid
+
+
+def test_rsi_score_boundaries():
+    """Test RSI score transitions at boundaries."""
+    # Exact boundaries
+    assert _rsi_score(30) > _rsi_score(40)   # Oversold better than weak
+    assert _rsi_score(55) > _rsi_score(75)   # Neutral better than overbought
+    assert _rsi_score(70) > _rsi_score(85)   # Slightly overbought better than extreme
