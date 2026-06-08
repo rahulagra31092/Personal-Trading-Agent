@@ -7,7 +7,6 @@ def compute_signal(
     quality_score: float = 0.5,
     congress_score: float = 0.5,
     estimate_revisions_score: float = 0.5,
-    news_score: float = 0.5,
     earnings_score: float = 0.5,
     weights: dict[str, float] | None = None,
 ) -> dict:
@@ -18,7 +17,6 @@ def compute_signal(
         + w["quality"] * quality_score
         + w["congress"] * congress_score
         + w["estimate_revisions"] * estimate_revisions_score
-        + w["news_reaction"] * news_score
         + w["earnings"] * earnings_score,
         4,
     )
@@ -39,7 +37,6 @@ def compute_signal(
             "quality": quality_score,
             "congress": congress_score,
             "estimate_revisions": estimate_revisions_score,
-            "news_reaction": news_score,
             "earnings": earnings_score,
         },
     }

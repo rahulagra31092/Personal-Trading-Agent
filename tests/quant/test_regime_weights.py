@@ -38,7 +38,7 @@ def test_compute_signal_with_custom_weights():
     result = compute_signal(
         technical_score=0.0, momentum_score=1.0, quality_score=0.0,
         congress_score=0.0, estimate_revisions_score=0.0,
-        news_score=0.0, earnings_score=0.0,
+        earnings_score=0.0,
         weights=crisis_weights,
     )
     expected = crisis_weights["momentum"]
@@ -49,7 +49,7 @@ def test_compute_signal_default_weights_unchanged():
     result = compute_signal(
         technical_score=0.0, momentum_score=1.0, quality_score=0.0,
         congress_score=0.0, estimate_revisions_score=0.0,
-        news_score=0.0, earnings_score=0.0,
+        earnings_score=0.0,
     )
     # Momentum weight in default = 0.30
     assert abs(result["composite_score"] - 0.30) < 0.001
