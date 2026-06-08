@@ -250,21 +250,23 @@ class TestPositionSizingConfidence:
     """Verify position sizing integrates signal confidence."""
 
     def test_trade_setup_includes_size_factor(self):
-        """Trade setup includes size_factor based on probability of success."""
+        """Trade setup includes size_factor based on signal conviction."""
         from quant.trade_setup import compute_trade_setup
 
-        # High confidence (70% win)
-        high_conf = compute_trade_setup(100.0, 95.0, prob_success=0.70)
+        # High conviction (0.70 signal)
+        high_conf = compute_trade_setup(100.0, 95.0, composite_score=0.70)
         assert "size_factor" in high_conf
-        assert high_conf["size_factor"] == 0.4  # (0.70 - 0.50) / 0.50 = 0.40
+        assert "conviction_mult" in high_conf
+        assert 1.15 < high_conf["conviction_mult"] < 1.20  # Strong signal multiplier ~1.167
 
-        # Medium confidence (55% win)
-        med_conf = compute_trade_setup(100.0, 95.0, prob_success=0.55)
-        assert med_conf["size_factor"] == 0.1  # (0.55 - 0.50) / 0.50 = 0.10
+        # Medium conviction (0.55 signal)
+        med_conf = compute_trade_setup(100.0, 95.0, composite_score=0.55)
+        assert "size_factor" in med_conf
+        assert 0.32 < med_conf["conviction_mult"] < 0.33  # Weak signal multiplier ~0.325
 
-        # Low confidence (50% win)
-        low_conf = compute_trade_setup(100.0, 95.0, prob_success=0.50)
-        assert low_conf["size_factor"] == 0.0  # (0.50 - 0.50) / 0.50 = 0.00
+        # Neutral signal (0.50 = weak conviction)
+        low_conf = compute_trade_setup(100.0, 95.0, composite_score=0.50)
+        assert low_conf["conviction_mult"] == 0.2  # Neutral conviction = minimum sizing
 
     def test_analyze_passes_confidence_to_trade_setup(self):
         """Analyze endpoint extracts MC confidence and passes to trade_setup."""
@@ -340,13 +342,12 @@ class TestDegradationScenarios:
                                             "rsi": 50.0,
                                             "ema_trend": "neutral",
                                         }
-                                        with patch("api.analyze.compute_garch_volatility", return_value={"daily_vol": 0.02, "vol_regime": "normal", "vol_scalar": 1.0}):
-                                            with patch("api.analyze.compute_signal", return_value={"label": "WATCH", "score": 0.5}):
-                                                with patch("api.analyze.run_monte_carlo", return_value={"prob_success": 0.5}):
+                                        with patch("api.analyze.compute_garch_volatility", return_value={"daily_vol": 0.02, "vol_regime": "normal", "vol_scalar": 0.5}):
+                                            with patch("api.analyze.compute_signal", return_value={"composite_score": 0.5, "label": "WATCH"}):
+                                                with patch("api.analyze.get_market_regime", return_value={"regime": "normal", "vix": 20.0, "position_factor": 1.0}):
                                                     with patch("api.analyze.compute_trade_setup", return_value={"entry_price": 100.0, "stop_loss": 95.0, "take_profit": 115.0, "risk_per_share": 5.0, "reward_per_share": 15.0, "risk_reward_ratio": 3.0, "size_factor": 0.0}):
-                                                        with patch("api.analyze.get_market_regime", return_value={"regime": "normal", "vix": 20.0}):
-                                                            with patch("api.analyze.get_regime_weights", return_value={}):
-                                                                result = analyze_ticker("AAPL")
+                                                        with patch("api.analyze.get_regime_weights", return_value={}):
+                                                            result = analyze_ticker("AAPL")
 
             # Should return a valid signal even with degraded data
             assert result["signal"]["label"] in ["BUY", "AVOID", "WATCH"]
@@ -367,7 +368,7 @@ class TestDegradationScenarios:
                 mock_garch.return_value = {
                     "daily_vol": 0.02,  # Use finite value instead of inf
                     "vol_regime": "normal",
-                    "vol_scalar": 1.0,  # Use finite value instead of nan
+                    "vol_scalar": 0.5,  # Use finite value instead of nan
                 }
 
                 with patch("api.analyze.compute_indicators") as mock_ind:
@@ -384,14 +385,8 @@ class TestDegradationScenarios:
                                     with patch("api.analyze.compute_news_score", return_value=0.5):
                                         with patch("api.analyze.compute_earnings_score", return_value=0.5):
                                             with patch("api.analyze.compute_signal") as mock_sig:
-                                                mock_sig.return_value = {"label": "WATCH", "score": 0.5}
-                                                with patch("api.analyze.run_monte_carlo") as mock_mc:
-                                                    mock_mc.return_value = {
-                                                        "base_target": 101.0,
-                                                        "lower_80": 99.0,
-                                                        "upper_80": 103.0,
-                                                        "prob_success": 0.5,
-                                                    }
+                                                mock_sig.return_value = {"composite_score": 0.5, "label": "WATCH"}
+                                                with patch("api.analyze.get_market_regime", return_value={"regime": "normal", "vix": 20.0, "position_factor": 1.0}):
                                                     with patch("api.analyze.compute_trade_setup") as mock_trade:
                                                         mock_trade.return_value = {
                                                             "entry_price": 100.0,
@@ -402,9 +397,8 @@ class TestDegradationScenarios:
                                                             "risk_reward_ratio": 3.0,
                                                             "size_factor": 0.0,
                                                         }
-                                                        with patch("api.analyze.get_market_regime", return_value={"regime": "normal", "vix": 20.0}):
-                                                            with patch("api.analyze.get_regime_weights", return_value={}):
-                                                                result = analyze_ticker("MSFT")
+                                                        with patch("api.analyze.get_regime_weights", return_value={}):
+                                                            result = analyze_ticker("MSFT")
 
             # Should serialize without error
             json_str = json.dumps(result)

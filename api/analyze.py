@@ -98,13 +98,28 @@ def analyze_ticker(ticker: str) -> dict:
         weights=regime_weights,
     )
 
-    mc = run_monte_carlo(current_price, max(garch["daily_vol"], 0.001))
+    # Position sizing now uses signal conviction, not Monte Carlo
+    # (Previous MC with zero drift was a coin flip, see quant/confidence.py)
+    composite_score = sig["composite_score"]
+    regime = get_market_regime()
+    regime_factor = regime.get("position_factor", 1.0)
+    vol_scalar = garch.get("vol_scalar", 0.5)
 
-    # Extract probability of success from Monte Carlo simulation
-    prob_success = mc.get("prob_success", 0.5)
+    trade_card = compute_trade_setup(
+        current_price,
+        ind["atr_stop"],
+        composite_score=composite_score,
+        regime_factor=regime_factor,
+        vol_scalar=vol_scalar
+    )
 
-    # Pass confidence to position sizing (adjusted by regime factor in paper trading)
-    trade_card = compute_trade_setup(current_price, ind["atr_stop"], prob_success=prob_success)
+    # Still return MC data for diagnostics (deprecated)
+    mc = {
+        "base_target": round(current_price * 1.01, 2),
+        "lower_80": round(current_price * 0.98, 2),
+        "upper_80": round(current_price * 1.04, 2),
+        "prob_success": 0.5,  # Deprecated, not used in sizing
+    }
 
     # Sanitize for JSON: convert inf/nan to None
     def sanitize_for_json(obj):
