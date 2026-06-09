@@ -5,6 +5,7 @@ Tracks:
 - Daily cumulative P&L
 - Consecutive loss streak
 - Circuit breaker status
+- Alerts on trigger
 """
 import logging
 from datetime import datetime, timedelta, timezone
@@ -12,6 +13,19 @@ from dataclasses import dataclass, field
 from typing import Optional, List
 
 logger = logging.getLogger(__name__)
+
+# Delayed import to avoid circular dependency
+_alert_module = None
+
+def _get_alert_module():
+    global _alert_module
+    if _alert_module is None:
+        try:
+            from api import circuit_breaker_alerts
+            _alert_module = circuit_breaker_alerts
+        except ImportError:
+            _alert_module = False  # Mark as unavailable
+    return _alert_module if _alert_module else None
 
 _ET = timezone(timedelta(hours=-5))
 
@@ -79,12 +93,22 @@ class TradingState:
         return self.circuit_breaker_open
 
     def _should_open_circuit_breaker(self) -> bool:
-        """Check if circuit breaker conditions are met."""
+        """Check if circuit breaker conditions are met and send alerts."""
         if self.daily_loss_pct <= -self.max_daily_loss:
             logger.error(
                 "Circuit breaker condition: daily_loss %.2f%% >= max %.2f%%",
                 -self.daily_loss_pct * 100, self.max_daily_loss * 100
             )
+            # Send Slack alert
+            alerts = _get_alert_module()
+            if alerts:
+                alerts.send_circuit_breaker_alert(
+                    reason="daily_loss",
+                    daily_loss_pct=self.daily_loss_pct,
+                    consecutive_losses=self.consecutive_losses,
+                    max_daily_loss=self.max_daily_loss,
+                    max_consecutive_losses=self.max_consecutive_losses,
+                )
             return True
 
         if self.consecutive_losses >= self.max_consecutive_losses:
@@ -92,6 +116,16 @@ class TradingState:
                 "Circuit breaker condition: consecutive_losses %d >= max %d",
                 self.consecutive_losses, self.max_consecutive_losses
             )
+            # Send Slack alert
+            alerts = _get_alert_module()
+            if alerts:
+                alerts.send_circuit_breaker_alert(
+                    reason="consecutive_losses",
+                    daily_loss_pct=self.daily_loss_pct,
+                    consecutive_losses=self.consecutive_losses,
+                    max_daily_loss=self.max_daily_loss,
+                    max_consecutive_losses=self.max_consecutive_losses,
+                )
             return True
 
         return False
