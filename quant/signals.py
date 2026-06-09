@@ -1,4 +1,5 @@
 import config
+from quant.per_stock_thresholds import get_entry_threshold
 
 
 def compute_signal(
@@ -9,7 +10,16 @@ def compute_signal(
     estimate_revisions_score: float = 0.5,
     earnings_score: float = 0.5,
     weights: dict[str, float] | None = None,
+    ticker: str | None = None,
+    buy_threshold: float | None = None,
 ) -> dict:
+    """
+    Compute signal with optional per-stock threshold.
+
+    Args:
+        ticker: Stock symbol for per-stock threshold lookup (e.g., "MSFT")
+        buy_threshold: Override threshold (if not None, use this instead of per-stock)
+    """
     w = weights if weights is not None else config.SIGNAL_WEIGHTS
     composite = round(
         w["technical"] * technical_score
@@ -26,7 +36,18 @@ def compute_signal(
     if quality_score < 0.35 and composite > 0.57:
         composite = 0.57
 
-    label = "BUY" if composite > 0.58 else ("AVOID" if composite < 0.42 else "WATCH")
+    # Determine entry threshold
+    if buy_threshold is not None:
+        # Explicit override (for testing)
+        threshold = buy_threshold
+    elif ticker:
+        # Use per-stock threshold
+        threshold = get_entry_threshold(ticker)
+    else:
+        # Default (backward compatible)
+        threshold = 0.65
+
+    label = "BUY" if composite > threshold else ("AVOID" if composite < 0.42 else "WATCH")
 
     return {
         "composite_score": composite,

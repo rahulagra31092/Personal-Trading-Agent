@@ -31,11 +31,13 @@ def test_watch_signal_at_midpoint():
 
 
 def test_exact_buy_boundary():
-    # composite just above 0.58 → BUY
-    result = compute_signal(technical_score=0.59, momentum_score=0.59, quality_score=0.59,
-                            insider_trades_score=0.59, estimate_revisions_score=0.59,
-                            earnings_score=0.59)
+    # composite just above 0.65 (new default) -> BUY
+    # (old threshold was 0.58, now default is 0.65)
+    result = compute_signal(technical_score=0.66, momentum_score=0.66, quality_score=0.66,
+                            insider_trades_score=0.66, estimate_revisions_score=0.66,
+                            earnings_score=0.66)
     assert result["label"] == "BUY"
+    assert result["composite_score"] > 0.65
 
 
 def test_exact_avoid_boundary():
