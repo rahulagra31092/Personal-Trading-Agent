@@ -22,7 +22,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8000/run-briefing/daily",
+        "url": "http://172.17.0.1:8000/run-briefing/daily",
         "options": {
           "timeout": 30000,
           "response": {

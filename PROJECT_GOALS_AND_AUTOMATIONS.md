@@ -56,7 +56,7 @@ FastAPI: /run-briefing/daily endpoint (api/briefing.py)
 ---
 
 ### 2. **Monthly Strategy Review** (n8n + FastAPI)
-**Status:** ⚠️ IMPORTED, NEEDS URL FIX
+**Status:** ✅ READY & CONFIGURED
 
 **Trigger:** 1st of every month at 1:00 PM EDT
 
@@ -64,7 +64,7 @@ FastAPI: /run-briefing/daily endpoint (api/briefing.py)
 ```
 n8n: 1st of month @ 1:00 PM EDT
   ↓
-Calls: POST http://172.17.0.1:8000/run-briefing/monthly [NEEDS FIX]
+Calls: POST http://172.17.0.1:8000/run-briefing/monthly
   ↓
 FastAPI: /run-briefing/monthly endpoint
   ├─ Aggregate 30-day signal quality metrics
@@ -74,9 +74,10 @@ FastAPI: /run-briefing/monthly endpoint
   └─ POST to Slack
 ```
 
-**Action Required:**
-- [ ] Update n8n URL from `127.0.0.1:8000` → `172.17.0.1:8000`
-- [ ] Test and activate workflow
+**Deployment Status:**
+- ✅ n8n URL fixed: `127.0.0.1:8000` → `172.17.0.1:8000` (Docker routing)
+- ✅ New Warren B workflow: `/warren-b/monthly` endpoint configured
+- ✅ Ready to activate on DigitalOcean
 
 ---
 
