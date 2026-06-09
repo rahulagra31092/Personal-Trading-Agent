@@ -130,6 +130,88 @@ def _conn() -> sqlite3.Connection:
 
 
 # ---------------------------------------------------------------------------
+# Data validation — prevents corruption
+# ---------------------------------------------------------------------------
+
+def validate_db_integrity() -> dict[str, bool]:
+    """
+    Check database for corruption: duplicate entries, orphaned records, invalid data.
+    Returns: {table_name: is_healthy} for all tables.
+    """
+    init_paper_db()
+    results = {}
+    try:
+        with _conn() as con:
+            # Check for duplicate signal_outcomes (same ticker + entry_date + entry_price)
+            dup_outcomes = con.execute(
+                """SELECT ticker, entry_date, entry_price, COUNT(*) as cnt
+                   FROM signal_outcomes
+                   GROUP BY ticker, entry_date, entry_price
+                   HAVING cnt > 1"""
+            ).fetchall()
+            results["signal_outcomes_duplicates"] = len(dup_outcomes) == 0
+            if dup_outcomes:
+                logger.warning("Found %d duplicate signal_outcomes: %s", len(dup_outcomes), dup_outcomes)
+
+            # Check for orphaned paper_positions (no corresponding trades)
+            orphaned_pos = con.execute(
+                """SELECT p.ticker FROM paper_positions p
+                   LEFT JOIN paper_trades t ON p.ticker = t.ticker
+                   WHERE t.ticker IS NULL"""
+            ).fetchall()
+            results["paper_positions_orphaned"] = len(orphaned_pos) == 0
+            if orphaned_pos:
+                logger.warning("Found %d orphaned positions: %s", len(orphaned_pos), orphaned_pos)
+
+            # Check for invalid data (zero cost, NaN, negative shares)
+            invalid_pos = con.execute(
+                """SELECT ticker FROM paper_positions
+                   WHERE avg_cost <= 0 OR shares <= 0 OR shares IS NULL OR avg_cost IS NULL"""
+            ).fetchall()
+            results["paper_positions_valid"] = len(invalid_pos) == 0
+            if invalid_pos:
+                logger.warning("Found %d positions with invalid data: %s", len(invalid_pos), invalid_pos)
+
+            results["database_healthy"] = all(results.values())
+    except Exception as exc:
+        logger.error("Database integrity check failed: %s", exc)
+        results["database_healthy"] = False
+    return results
+
+
+def cleanup_duplicate_outcomes() -> int:
+    """
+    Remove duplicate signal_outcomes entries (same ticker + entry_date + entry_price).
+    Keeps only the first entry (lowest id) of each duplicate set.
+    Returns: count of rows deleted.
+    """
+    init_paper_db()
+    deleted = 0
+    try:
+        with _conn() as con:
+            # Find duplicates
+            dup_ids = con.execute(
+                """SELECT id FROM signal_outcomes
+                   WHERE id NOT IN (
+                       SELECT MIN(id)
+                       FROM signal_outcomes
+                       GROUP BY ticker, entry_date, entry_price
+                   )"""
+            ).fetchall()
+
+            if dup_ids:
+                count = len(dup_ids)
+                id_list = tuple(r["id"] for r in dup_ids)
+                placeholders = ",".join("?" * len(id_list))
+                con.execute(f"DELETE FROM signal_outcomes WHERE id IN ({placeholders})", id_list)
+                logger.warning("Cleaned up %d duplicate signal_outcomes entries", count)
+                deleted = count
+    except Exception as exc:
+        logger.error("cleanup_duplicate_outcomes failed: %s", exc)
+    return deleted
+
+
+# ---------------------------------------------------------------------------
 # Outcome tracking — feeds the quarterly regression
 # ---------------------------------------------------------------------------
 
@@ -143,11 +225,33 @@ def log_trade_entry(
     regime: str = "unknown",
     sector: str = "Other",
 ) -> None:
-    """Record a new paper position entry with all 7 factor scores."""
+    """Record a new paper position entry with all 7 factor scores.
+
+    Validates to prevent duplicate entries (same ticker + date + price).
+    """
     init_paper_db()
     ls = layer_scores or {}
+
+    # Validate inputs
     try:
+        ticker = ticker.upper()
+        if not ticker or not entry_date or entry_price <= 0:
+            logger.warning("log_trade_entry: invalid inputs for %s on %s @ %s", ticker, entry_date, entry_price)
+            return
+
         with _conn() as con:
+            # Check for duplicate (same ticker, date, price combination)
+            existing = con.execute(
+                """SELECT id FROM signal_outcomes
+                   WHERE ticker = ? AND entry_date = ? AND entry_price = ? AND exit_date IS NULL""",
+                (ticker, entry_date, entry_price),
+            ).fetchone()
+
+            if existing:
+                logger.warning("log_trade_entry: duplicate entry detected for %s on %s @ %s (id=%s)",
+                               ticker, entry_date, entry_price, existing["id"])
+                return
+
             con.execute(
                 """INSERT INTO signal_outcomes
                    (ticker, entry_date, entry_price,
@@ -156,7 +260,7 @@ def log_trade_entry(
                     score_composite, vix_at_entry, regime_at_entry, sector)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    ticker.upper(), entry_date, entry_price,
+                    ticker, entry_date, entry_price,
                     ls.get("technical"), ls.get("momentum"), ls.get("quality"),
                     ls.get("congress"), ls.get("estimate_revisions"), ls.get("news_reaction"),
                     ls.get("earnings"), composite_score,

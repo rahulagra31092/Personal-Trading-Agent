@@ -19,6 +19,9 @@ from api.paper_portfolio import (
     log_warren_decision, get_recent_warren_decisions,
     log_warren_conversation, get_warren_conversation_history,
 )
+from api.paper_portfolio import (
+    log_trade_entry, validate_db_integrity, cleanup_duplicate_outcomes,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -378,3 +381,140 @@ def test_get_warren_conversation_history_chronological():
     history = get_warren_conversation_history(session_id=session)
     assert history[0]["content"] == "First message"
     assert history[1]["content"] == "Second message"
+
+
+# ============================================================================
+# Data Integrity Tests (NEW)
+# ============================================================================
+
+def test_validate_db_integrity_healthy_database():
+    """Fresh database should pass all integrity checks."""
+    initialize_portfolio(_BUYS, capital=STARTING_CAPITAL)
+    integrity = validate_db_integrity()
+    assert integrity["database_healthy"] is True
+    assert integrity["signal_outcomes_duplicates"] is True
+    assert integrity["paper_positions_valid"] is True
+
+
+def test_log_trade_entry_prevents_duplicates():
+    """Same ticker/date/price should not create duplicate entries."""
+    initialize_portfolio(_BUYS, capital=STARTING_CAPITAL)
+
+    # Log first entry
+    log_trade_entry(
+        ticker="NVDA",
+        entry_date="2026-06-09",
+        entry_price=175.50,
+        layer_scores={"technical": 0.7, "momentum": 0.6},
+        composite_score=0.68,
+    )
+
+    # Attempt duplicate entry (same ticker, date, price)
+    log_trade_entry(
+        ticker="NVDA",
+        entry_date="2026-06-09",
+        entry_price=175.50,
+        layer_scores={"technical": 0.75, "momentum": 0.65},
+        composite_score=0.69,
+    )
+
+    # Check: only one entry exists
+    from api.paper_portfolio import _conn
+    with _conn() as con:
+        rows = con.execute(
+            "SELECT id FROM signal_outcomes WHERE ticker = ? AND entry_date = ?",
+            ("NVDA", "2026-06-09"),
+        ).fetchall()
+    assert len(rows) == 1, "Duplicate entry was not prevented"
+
+
+def test_log_trade_entry_allows_different_dates():
+    """Same ticker on different dates should create separate entries."""
+    initialize_portfolio(_BUYS, capital=STARTING_CAPITAL)
+
+    log_trade_entry(
+        ticker="NVDA",
+        entry_date="2026-06-09",
+        entry_price=175.50,
+        layer_scores={},
+        composite_score=0.68,
+    )
+
+    log_trade_entry(
+        ticker="NVDA",
+        entry_date="2026-06-10",
+        entry_price=176.00,
+        layer_scores={},
+        composite_score=0.70,
+    )
+
+    from api.paper_portfolio import _conn
+    with _conn() as con:
+        rows = con.execute(
+            "SELECT id FROM signal_outcomes WHERE ticker = ?",
+            ("NVDA",),
+        ).fetchall()
+    assert len(rows) == 2, "Different dates should create separate entries"
+
+
+def test_cleanup_duplicate_outcomes_removes_duplicates():
+    """cleanup_duplicate_outcomes should remove duplicate signal_outcomes."""
+    from api.paper_portfolio import _conn
+
+    initialize_portfolio(_BUYS, capital=STARTING_CAPITAL)
+
+    # Manually insert duplicates (bypassing validation)
+    with _conn() as con:
+        con.execute(
+            """INSERT INTO signal_outcomes
+               (ticker, entry_date, entry_price, score_composite)
+               VALUES (?, ?, ?, ?)""",
+            ("NVDA", "2026-06-09", 175.50, 0.68),
+        )
+        con.execute(
+            """INSERT INTO signal_outcomes
+               (ticker, entry_date, entry_price, score_composite)
+               VALUES (?, ?, ?, ?)""",
+            ("NVDA", "2026-06-09", 175.50, 0.69),
+        )
+
+    # Verify duplicates exist
+    with _conn() as con:
+        rows = con.execute(
+            "SELECT id FROM signal_outcomes WHERE ticker = ? AND entry_date = ?",
+            ("NVDA", "2026-06-09"),
+        ).fetchall()
+    assert len(rows) == 2
+
+    # Clean up
+    deleted = cleanup_duplicate_outcomes()
+
+    # Verify only one entry remains
+    with _conn() as con:
+        rows = con.execute(
+            "SELECT id FROM signal_outcomes WHERE ticker = ? AND entry_date = ?",
+            ("NVDA", "2026-06-09"),
+        ).fetchall()
+    assert len(rows) == 1
+    assert deleted == 1
+
+
+def test_log_trade_entry_rejects_invalid_price():
+    """Entries with zero or negative price should be rejected."""
+    initialize_portfolio(_BUYS, capital=STARTING_CAPITAL)
+
+    log_trade_entry(
+        ticker="NVDA",
+        entry_date="2026-06-09",
+        entry_price=0.0,  # Invalid
+        layer_scores={},
+        composite_score=0.68,
+    )
+
+    from api.paper_portfolio import _conn
+    with _conn() as con:
+        rows = con.execute(
+            "SELECT id FROM signal_outcomes WHERE ticker = ? AND entry_date = ?",
+            ("NVDA", "2026-06-09"),
+        ).fetchall()
+    assert len(rows) == 0, "Invalid price entry should be rejected"
