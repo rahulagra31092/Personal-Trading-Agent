@@ -23,6 +23,7 @@
 ### 1. **Daily Briefing Automation** (n8n + FastAPI)
 **Status:** ✅ LIVE & TESTED
 
+**Universe:** 77 stocks (47 blue-chip + 30 midcap)  
 **Trigger:** Every weekday at 8:05 AM EDT (via n8n cron)
 
 **Workflow:**
@@ -33,7 +34,7 @@ Calls: POST http://172.17.0.1:8000/run-briefing/daily
   ↓
 FastAPI: /run-briefing/daily endpoint (api/briefing.py)
   ├─ Fetch market data (VIX, SPY 3-month return, regime)
-  ├─ Score all 45 blue-chip stocks on 7-factor model
+  ├─ Score all 77 stocks on 7-factor model
   ├─ Generate BUY/AVOID/WATCH picks (signal > 0.58)
   ├─ Update paper portfolio P&L
   ├─ Check trailing stops (20% from peak)

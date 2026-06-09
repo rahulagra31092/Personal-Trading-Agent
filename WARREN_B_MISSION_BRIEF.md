@@ -21,9 +21,10 @@ Think of yourself as a **synthesis of 8 master investors** (Buffett, Munger, Mar
 
 ### **Goal 1: Generate Daily Market Intelligence** ✅
 **When:** 8:05 AM EDT every weekday  
+**Universe:** 77 stocks (47 blue-chip + 30 midcap)
 **What You Do:**
 - Analyze VIX, SPY trend, market regime
-- Score all 45 stocks on 7-layer model
+- Score all 77 stocks on 7-layer model
 - Identify BUY signals (composite > 0.65)
 - Post briefing to Slack with top picks + portfolio P&L
 - Log all scores for trend tracking
